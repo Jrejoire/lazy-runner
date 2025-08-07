@@ -16,3 +16,4 @@ export { ScreenFooter } from './screen-footer';
 export { ExerciseScreen } from './exercise-screen';
 export { InfoModal } from './info-modal';
 export { Layout } from './layout';
+export { TimePicker } from './time-picker';

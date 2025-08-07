@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Button } from './button';
 import { COLORS } from '../constantes/color.constante';
+import { TimePicker } from './time-picker';
 
 interface TrainingAlert {
   id: string;
@@ -42,10 +43,6 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   });
   const [selectedHour, setSelectedHour] = useState(12);
   const [selectedMinute, setSelectedMinute] = useState(0);
-  const [hourScrollView, setHourScrollView] = useState<ScrollView | null>(null);
-  const [minuteScrollView, setMinuteScrollView] = useState<ScrollView | null>(
-    null,
-  );
 
   const days = [
     'lundi',
@@ -160,47 +157,6 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     return alerts.filter(alert => alert.day === day);
   };
 
-  const handleHourScroll = (event: any) => {
-    const y = event.nativeEvent.contentOffset.y;
-    const itemHeight = 40; // Hauteur exacte d'un item
-    const newHour = Math.round(y / itemHeight);
-    if (newHour >= 0 && newHour < 24 && newHour !== selectedHour) {
-      setSelectedHour(newHour);
-    }
-  };
-
-  const handleMinuteScroll = (event: any) => {
-    const y = event.nativeEvent.contentOffset.y;
-    const itemHeight = 40; // Hauteur exacte d'un item
-    const newMinute = Math.round(y / itemHeight);
-    if (newMinute >= 0 && newMinute < 60 && newMinute !== selectedMinute) {
-      setSelectedMinute(newMinute);
-    }
-  };
-
-  const snapToHour = (hour: number) => {
-    if (hourScrollView) {
-      hourScrollView.scrollTo({ y: hour * 40, animated: true });
-    }
-  };
-
-  const snapToMinute = (minute: number) => {
-    if (minuteScrollView) {
-      minuteScrollView.scrollTo({ y: minute * 40, animated: true });
-    }
-  };
-
-  // Centrer automatiquement les valeurs quand le modal s'ouvre
-  useEffect(() => {
-    if (selectedDay !== null) {
-      // Petit délai pour laisser le modal se rendre
-      setTimeout(() => {
-        snapToHour(selectedHour);
-        snapToMinute(selectedMinute);
-      }, 100);
-    }
-  }, [selectedDay]);
-
   return (
     <View style={styles.container}>
       <View style={styles.card}>
@@ -298,74 +254,24 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Heure</Text>
-              <View style={styles.timePickerContainer}>
-                <View style={styles.pickerColumn}>
-                  <ScrollView
-                    style={styles.picker}
-                    contentContainerStyle={styles.pickerContent}
-                    showsVerticalScrollIndicator={false}
-                    onScroll={handleHourScroll}
-                    onMomentumScrollEnd={() => snapToHour(selectedHour)}
-                    scrollEventThrottle={16}
-                    ref={setHourScrollView}
-                  >
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <TouchableOpacity
-                        key={i}
-                        style={[
-                          styles.pickerItem,
-                          selectedHour === i && styles.pickerItemSelected,
-                        ]}
-                        onPress={() => setSelectedHour(i)}
-                      >
-                        <Text
-                          style={[
-                            styles.pickerItemText,
-                            selectedHour === i && styles.pickerItemTextSelected,
-                          ]}
-                        >
-                          {i.toString().padStart(2, '0')}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-
-                <Text style={styles.timeSeparator}>:</Text>
-
-                <View style={styles.pickerColumn}>
-                  <ScrollView
-                    style={styles.picker}
-                    contentContainerStyle={styles.pickerContent}
-                    showsVerticalScrollIndicator={false}
-                    onScroll={handleMinuteScroll}
-                    onMomentumScrollEnd={() => snapToMinute(selectedMinute)}
-                    scrollEventThrottle={16}
-                    ref={setMinuteScrollView}
-                  >
-                    {Array.from({ length: 60 }, (_, i) => (
-                      <TouchableOpacity
-                        key={i}
-                        style={[
-                          styles.pickerItem,
-                          selectedMinute === i && styles.pickerItemSelected,
-                        ]}
-                        onPress={() => setSelectedMinute(i)}
-                      >
-                        <Text
-                          style={[
-                            styles.pickerItemText,
-                            selectedMinute === i &&
-                              styles.pickerItemTextSelected,
-                          ]}
-                        >
-                          {i.toString().padStart(2, '0')}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              </View>
+              <TimePicker
+                selectedHour={selectedHour}
+                selectedMinute={selectedMinute}
+                onHourChange={setSelectedHour}
+                onMinuteChange={setSelectedMinute}
+                onTimeChange={(hour, minute) => {
+                  setSelectedHour(hour);
+                  setSelectedMinute(minute);
+                  // Mettre à jour le formulaire avec la nouvelle heure
+                  const timeString = `${hour
+                    .toString()
+                    .padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                  setAlertForm(prev => ({
+                    ...prev,
+                    time: timeString,
+                  }));
+                }}
+              />
             </View>
 
             <View style={styles.formGroup}>
@@ -560,47 +466,5 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
-  },
-  timePickerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.gris,
-    borderRadius: 8,
-    backgroundColor: COLORS.blanc,
-  },
-  pickerColumn: {
-    alignItems: 'center',
-  },
-  picker: {
-    height: 40, // Hauteur d'un seul item
-    width: 80,
-  },
-  pickerContent: {
-    paddingVertical: 0, // Pas de padding pour centrer
-  },
-  pickerItem: {
-    height: 40, // Hauteur fixe pour un seul item visible
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6,
-  },
-  pickerItemSelected: {
-    backgroundColor: COLORS.orange,
-  },
-  pickerItemText: {
-    fontSize: 16,
-    color: COLORS.noir,
-  },
-  pickerItemTextSelected: {
-    color: COLORS.blanc,
-    fontWeight: '600',
-  },
-  timeSeparator: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.noir,
-    marginHorizontal: 12,
   },
 });
