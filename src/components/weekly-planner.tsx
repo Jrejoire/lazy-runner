@@ -1,0 +1,613 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+  TextInput,
+  Platform,
+} from 'react-native';
+import { Alert } from 'react-native';
+import { Button } from './button';
+
+interface TrainingAlert {
+  id: string;
+  day: string;
+  time: string;
+  label: string;
+  color: string;
+  type: 'running' | 'mobility' | 'strengthening';
+}
+
+interface WeeklyPlannerProps {
+  alerts: TrainingAlert[];
+  onAlertsChange: (alerts: TrainingAlert[]) => void;
+}
+
+export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
+  alerts,
+  onAlertsChange,
+}) => {
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [alertForm, setAlertForm] = useState({
+    time: '',
+    label: '',
+    color: '#3b82f6',
+    type: 'running' as 'running' | 'mobility' | 'strengthening',
+  });
+
+  const days = [
+    'Lundi',
+    'Mardi',
+    'Mercredi',
+    'Jeudi',
+    'Vendredi',
+    'Samedi',
+    'Dimanche',
+  ];
+
+  const colors = [
+    '#3b82f6', // blue
+    '#10b981', // green
+    '#f59e0b', // orange
+    '#ef4444', // red
+    '#8b5cf6', // purple
+    '#ec4899', // pink
+    '#06b6d4', // cyan
+  ];
+
+  const trainingTypes = [
+    { key: 'running', label: 'Course', emoji: '🏃‍♂️', color: '#3b82f6' },
+    { key: 'mobility', label: 'Mobilité', emoji: '🧘‍♀️', color: '#10b981' },
+    {
+      key: 'strengthening',
+      label: 'Renforcement',
+      emoji: '💪',
+      color: '#f59e0b',
+    },
+  ];
+
+  const timeToPosition = (timeString: string): number => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes;
+    // Convert to percentage (0% = midnight, 100% = 11:59 PM)
+    return (totalMinutes / (24 * 60)) * 100;
+  };
+
+  const handleBarClick = (day: string) => {
+    setSelectedDay(day);
+    setAlertForm({
+      time: '',
+      label: '',
+      color: '#3b82f6',
+      type: 'running',
+    });
+  };
+
+  const handleSaveAlert = () => {
+    if (selectedDay && alertForm.time && alertForm.label) {
+      const newAlert: TrainingAlert = {
+        id: Date.now().toString(),
+        day: selectedDay,
+        time: alertForm.time,
+        label: alertForm.label,
+        color: alertForm.color,
+        type: alertForm.type,
+      };
+      onAlertsChange([...alerts, newAlert]);
+      setSelectedDay(null);
+      setAlertForm({
+        time: '',
+        label: '',
+        color: '#3b82f6',
+        type: 'running',
+      });
+    }
+  };
+
+  const removeAlert = (alertId: string) => {
+    onAlertsChange(alerts.filter(alert => alert.id !== alertId));
+  };
+
+  const getDayAlerts = (day: string) => {
+    return alerts.filter(alert => alert.day === day);
+  };
+
+  const getTrainingTypeInfo = (type: string) => {
+    return trainingTypes.find(t => t.key === type) || trainingTypes[0];
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Planificateur Hebdomadaire 📅</Text>
+        <Text style={styles.subtitle}>
+          Planifiez vos entraînements de la semaine
+        </Text>
+      </View>
+
+      {/* Weekly Bars */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Cette semaine</Text>
+        </View>
+        <View style={styles.cardContent}>
+          <View style={styles.weeklyBars}>
+            {days.map((day, index) => {
+              const dayAlerts = getDayAlerts(day);
+              return (
+                <View key={day} style={styles.dayColumn}>
+                  {/* Day Bar */}
+                  <TouchableOpacity
+                    style={styles.dayBar}
+                    onPress={() => handleBarClick(day)}
+                    activeOpacity={0.7}
+                  >
+                    {/* Alert Dots */}
+                    {dayAlerts.map(alert => (
+                      <View
+                        key={alert.id}
+                        style={[
+                          styles.alertDot,
+                          {
+                            backgroundColor: alert.color,
+                            top: `${timeToPosition(alert.time)}%`,
+                          },
+                        ]}
+                      >
+                        <View style={styles.tooltip}>
+                          <Text style={styles.tooltipText}>
+                            {alert.time} - {alert.label}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+
+                    {/* Time markers */}
+                    <Text style={[styles.timeMarker, styles.timeMarker0]}>
+                      00:00
+                    </Text>
+                    <Text style={[styles.timeMarker, styles.timeMarker6]}>
+                      06:00
+                    </Text>
+                    <Text style={[styles.timeMarker, styles.timeMarker12]}>
+                      12:00
+                    </Text>
+                    <Text style={[styles.timeMarker, styles.timeMarker18]}>
+                      18:00
+                    </Text>
+                    <Text style={[styles.timeMarker, styles.timeMarker24]}>
+                      24:00
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Day Name */}
+                  <Text style={styles.dayName}>{day.slice(0, 3)}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      </View>
+
+      {/* All Alerts */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Tous les entraînements</Text>
+        </View>
+        <View style={styles.cardContent}>
+          {alerts.length === 0 ? (
+            <Text style={styles.emptyText}>
+              Aucun entraînement planifié. Cliquez sur un jour pour en ajouter
+              un !
+            </Text>
+          ) : (
+            <ScrollView style={styles.alertsList}>
+              {alerts.map(alert => {
+                const typeInfo = getTrainingTypeInfo(alert.type);
+                return (
+                  <View key={alert.id} style={styles.alertItem}>
+                    <View style={styles.alertInfo}>
+                      <View
+                        style={[
+                          styles.alertDot,
+                          { backgroundColor: alert.color },
+                        ]}
+                      />
+                      <View style={styles.alertDetails}>
+                        <Text style={styles.alertLabel}>{alert.label}</Text>
+                        <Text style={styles.alertTime}>
+                          {alert.day} à {alert.time}
+                        </Text>
+                        <Text style={styles.alertType}>
+                          {typeInfo.emoji} {typeInfo.label}
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => removeAlert(alert.id)}
+                    >
+                      <Text style={styles.removeButtonText}>×</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          )}
+        </View>
+      </View>
+
+      {/* Alert Dialog */}
+      <Modal
+        visible={selectedDay !== null}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setSelectedDay(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              Planifier un entraînement pour {selectedDay}
+            </Text>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Heure</Text>
+              <TextInput
+                style={styles.input}
+                value={alertForm.time}
+                onChangeText={text =>
+                  setAlertForm({ ...alertForm, time: text })
+                }
+                placeholder="07:00"
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Label</Text>
+              <TextInput
+                style={styles.input}
+                value={alertForm.label}
+                onChangeText={text =>
+                  setAlertForm({ ...alertForm, label: text })
+                }
+                placeholder="ex: Course matinale, Séance mobilité"
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Type d'entraînement</Text>
+              <View style={styles.typeButtons}>
+                {trainingTypes.map(type => (
+                  <TouchableOpacity
+                    key={type.key}
+                    style={[
+                      styles.typeButton,
+                      alertForm.type === type.key && styles.typeButtonActive,
+                    ]}
+                    onPress={() =>
+                      setAlertForm({ ...alertForm, type: type.key as any })
+                    }
+                  >
+                    <Text style={styles.typeEmoji}>{type.emoji}</Text>
+                    <Text
+                      style={[
+                        styles.typeLabel,
+                        alertForm.type === type.key && styles.typeLabelActive,
+                      ]}
+                    >
+                      {type.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Couleur</Text>
+              <View style={styles.colorButtons}>
+                {colors.map(color => (
+                  <TouchableOpacity
+                    key={color}
+                    style={[
+                      styles.colorButton,
+                      alertForm.color === color && styles.colorButtonActive,
+                      { backgroundColor: color },
+                    ]}
+                    onPress={() => setAlertForm({ ...alertForm, color })}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <Button
+                title="Annuler"
+                onPress={() => setSelectedDay(null)}
+                variant="secondary"
+                style={styles.modalButton}
+              />
+              <Button
+                title="Sauvegarder"
+                onPress={handleSaveAlert}
+                disabled={!alertForm.time || !alertForm.label}
+                style={styles.modalButton}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cardHeader: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  cardContent: {
+    padding: 16,
+  },
+  weeklyBars: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    height: 200,
+  },
+  dayColumn: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 2,
+  },
+  dayBar: {
+    width: '100%',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    flex: 1,
+    marginBottom: 8,
+    position: 'relative',
+  },
+  alertDot: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    left: '50%',
+    marginLeft: -6,
+    marginTop: -6,
+    zIndex: 2,
+  },
+  tooltip: {
+    position: 'absolute',
+    backgroundColor: '#000',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    bottom: '100%',
+    left: '50%',
+    marginLeft: -50,
+    marginBottom: 8,
+    opacity: 0,
+  },
+  tooltipText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    textAlign: 'center',
+  },
+  timeMarker: {
+    position: 'absolute',
+    fontSize: 10,
+    color: '#999',
+    left: -30,
+  },
+  timeMarker0: {
+    top: 0,
+  },
+  timeMarker6: {
+    top: '25%',
+  },
+  timeMarker12: {
+    top: '50%',
+  },
+  timeMarker18: {
+    top: '75%',
+  },
+  timeMarker24: {
+    bottom: 0,
+  },
+  dayName: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#333',
+  },
+  alertsList: {
+    maxHeight: 200,
+  },
+  alertItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  alertInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  alertDetails: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  alertLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+  },
+  alertTime: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  alertType: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  removeButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#999',
+    fontSize: 14,
+    paddingVertical: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    margin: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  formGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  typeButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  typeButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+  },
+  typeButtonActive: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
+  },
+  typeEmoji: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  typeLabel: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  typeLabelActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  colorButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  colorButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  colorButtonActive: {
+    borderColor: '#333',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 1,
+  },
+});
