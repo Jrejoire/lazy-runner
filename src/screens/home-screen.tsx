@@ -11,8 +11,9 @@ import {
 import { Button, WeeklyPlanner } from '../components';
 import { WeeklyPlan } from '../types';
 import { useUser } from '../hooks/useUser';
+import { useNotifications } from '../hooks/useNotifications';
 
-interface Alert {
+interface TrainingAlert {
   id: string;
   day: string;
   time: string;
@@ -27,8 +28,9 @@ interface HomeScreenProps {
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { user, loading, updateWeeklyPlan, getWeeklyPlan } = useUser();
+  const { testNotification, hasPermission } = useNotifications();
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan>({});
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alerts, setAlerts] = useState<TrainingAlert[]>([]);
 
   const days = [
     'Lundi',
@@ -57,7 +59,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const loadAlerts = () => {
     // TODO: Charger les alertes depuis AsyncStorage
     // Pour l'instant, on utilise des données de test
-    const testAlerts: Alert[] = [
+    const testAlerts: TrainingAlert[] = [
       {
         id: '1',
         day: 'Lundi',
@@ -86,7 +88,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     setAlerts(testAlerts);
   };
 
-  const handleAlertsChange = (newAlerts: Alert[]) => {
+  const handleAlertsChange = (newAlerts: TrainingAlert[]) => {
     setAlerts(newAlerts);
     // TODO: Sauvegarder les alertes dans AsyncStorage
   };
@@ -118,6 +120,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       ...type,
       active: plan[type.key as keyof typeof plan] || false,
     }));
+  };
+
+  const handleTestNotification = () => {
+    testNotification();
+    Alert.alert(
+      'Test de notification',
+      'Une notification de test a été envoyée ! Vérifiez votre barre de notifications.',
+    );
   };
 
   if (loading) {
@@ -190,6 +200,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           variant="secondary"
           style={styles.actionButton}
         />
+        {hasPermission && (
+          <Button
+            title="🔔 Tester les notifications"
+            onPress={handleTestNotification}
+            variant="secondary"
+            style={styles.actionButton}
+          />
+        )}
       </View>
 
       <View style={styles.tips}>
@@ -197,7 +215,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <Text style={styles.tipsText}>
           • Planifiez vos entraînements à l'avance pour rester motivé{'\n'}•
           Alternez course, mobilité et renforcement{'\n'}• Écoutez votre corps
-          et ajustez l'intensité
+          et ajustez l'intensité{'\n'}• Activez les notifications pour ne pas
+          manquer vos séances
         </Text>
       </View>
     </ScrollView>

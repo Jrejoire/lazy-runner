@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Alert } from 'react-native';
 import { Button } from './button';
+import { useNotifications } from '../hooks/useNotifications';
 
 interface TrainingAlert {
   id: string;
@@ -37,6 +38,8 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     color: '#3b82f6',
     type: 'running' as 'running' | 'mobility' | 'strengthening',
   });
+
+  const { scheduleTrainingNotification, cancelTrainingNotification } = useNotifications();
 
   const days = [
     'Lundi',
@@ -86,6 +89,26 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     });
   };
 
+  const getNextWeekDate = (dayName: string, timeString: string): Date => {
+    const dayIndex = days.indexOf(dayName);
+    const today = new Date();
+    const currentDay = today.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
+    
+    // Convertir l'index de jour (Lundi = 0) vers l'index JavaScript (Lundi = 1)
+    const targetDay = dayIndex === 0 ? 1 : dayIndex + 1;
+    
+    // Calculer le prochain jour de la semaine
+    const daysUntilTarget = (targetDay - currentDay + 7) % 7;
+    const nextDate = new Date(today);
+    nextDate.setDate(today.getDate() + daysUntilTarget);
+    
+    // Définir l'heure
+    const [hours, minutes] = timeString.split(':').map(Number);
+    nextDate.setHours(hours, minutes, 0, 0);
+    
+    return nextDate;
+  };
+
   const handleSaveAlert = () => {
     if (selectedDay && alertForm.time && alertForm.label) {
       const newAlert: TrainingAlert = {
@@ -96,6 +119,19 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
         color: alertForm.color,
         type: alertForm.type,
       };
+
+      // Planifier les notifications
+      const trainingDate = getNextWeekDate(selectedDay, alertForm.time);
+      const typeInfo = trainingTypes.find(t => t.key === alertForm.type);
+      
+      scheduleTrainingNotification({
+        id: newAlert.id,
+        title: `${typeInfo?.emoji} ${alertForm.label}`,
+        message: `C'est l'heure de votre ${typeInfo?.label.toLowerCase()} !`,
+        date: trainingDate,
+        trainingType: alertForm.type,
+      });
+
       onAlertsChange([...alerts, newAlert]);
       setSelectedDay(null);
       setAlertForm({
@@ -108,6 +144,10 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   };
 
   const removeAlert = (alertId: string) => {
+    // Annuler les notifications associées
+    cancelTrainingNotification(alertId);
+    
+    // Supprimer l'alerte
     onAlertsChange(alerts.filter(alert => alert.id !== alertId));
   };
 

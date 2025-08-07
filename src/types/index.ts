@@ -16,7 +16,6 @@ export interface StrengtheningExercise {
   repAvance: number;
 }
 
-// Types étendus avec préférences utilisateur
 export interface MobilityExerciseWithPreference extends MobilityExercise {
   userPreference: 'green' | 'red' | 'white';
 }
@@ -29,6 +28,7 @@ export interface StrengtheningExerciseWithPreference
 export interface User {
   id: string;
   name: string;
+  gender: 'homme' | 'femme' | 'non-renseigné';
   level: 'débutant' | 'intermédiaire' | 'avancé';
   exercisePreferences: {
     [exerciseId: string]: 'green' | 'red' | 'white';
