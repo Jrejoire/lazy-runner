@@ -3,11 +3,8 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  Alert,
-  Platform,
 } from 'react-native';
-import { Button, Timer, ExerciseCard, ColorLegend } from '../components';
+import { ExerciseScreen } from '../components';
 import { mobilityExercises } from '../data/mobility-exercises';
 import { MobilityExerciseWithPreference } from '../types';
 import { useUser } from '../hooks/useUser';
@@ -75,14 +72,6 @@ export const MobilityScreen: React.FC<MobilityScreenProps> = ({
     const selectedExercises = exercises.filter(
       ex => ex.userPreference !== 'red',
     );
-    if (selectedExercises.length === 0) {
-      Alert.alert(
-        'Aucun exercice sélectionné',
-        'Veuillez sélectionner au moins un exercice (🟢 ou ⚪️) pour commencer la séance.',
-      );
-      return;
-    }
-
     navigation.navigate('Session', {
       type: 'mobility',
       exercises: selectedExercises,
@@ -102,63 +91,21 @@ export const MobilityScreen: React.FC<MobilityScreenProps> = ({
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Séance de Mobilité</Text>
-        <Text style={styles.subtitle}>
-          Améliorez votre flexibilité et votre récupération
-        </Text>
-      </View>
-
-      <View style={styles.timersContainer}>
-        <View style={styles.timerRow}>
-          <Timer seconds={totalDuration} label="Durée totale" size="medium" />
-          <Timer
-            seconds={exerciseDuration}
-            label="Temps par exercice"
-            size="medium"
-          />
-        </View>
-      </View>
-
-      <View style={styles.exercisesSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Exercices de mobilité</Text>
-          <Text style={styles.exerciseCount}>
-            {getSelectedExercisesCount()} exercice(s) sélectionné(s)
-          </Text>
-        </View>
-
-        <ScrollView
-          style={styles.exercisesList}
-          contentContainerStyle={styles.exercisesContent}
-        >
-          {exercises.map(exercise => (
-            <ExerciseCard
-              key={exercise.id}
-              exercise={exercise}
-              onPress={() => {
-                // TODO: Afficher les détails de l'exercice
-                console.log("Détails de l'exercice:", exercise.name);
-              }}
-              onPreferenceChange={preference =>
-                handleExercisePreferenceChange(exercise.id, preference)
-              }
-            />
-          ))}
-        </ScrollView>
-
-        <ColorLegend />
-      </View>
-
-      <View style={styles.footer}>
-        <Button
-          title="Commencer la séance"
-          onPress={startSession}
-          disabled={getSelectedExercisesCount() === 0}
-        />
-      </View>
-    </View>
+    <ExerciseScreen
+      title="Séance de Mobilité"
+      subtitle="Améliorez votre flexibilité et votre récupération"
+      exercises={exercises}
+      totalDuration={totalDuration}
+      exerciseDuration={exerciseDuration}
+      selectedCount={getSelectedExercisesCount()}
+      onExercisePress={(exercise) => {
+        // TODO: Afficher les détails de l'exercice
+        console.log("Détails de l'exercice:", exercise.name);
+      }}
+      onPreferenceChange={handleExercisePreferenceChange}
+      onStartSession={startSession}
+      sessionType="mobility"
+    />
   );
 };
 
@@ -176,56 +123,5 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     color: '#666',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  timersContainer: {
-    padding: 16,
-  },
-  timerRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  exercisesSection: {
-    flex: 1,
-  },
-  sectionHeader: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  exerciseCount: {
-    fontSize: 14,
-    color: '#666',
-  },
-  exercisesList: {
-    flex: 1,
-  },
-  exercisesContent: {
-    paddingBottom: Platform.OS === 'android' ? 100 : 20,
-  },
-  footer: {
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
   },
 });

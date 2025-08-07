@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { Alert } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { Button } from './button';
 import { useNotifications } from '../hooks/useNotifications';
 
@@ -39,7 +40,8 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     type: 'running' as 'running' | 'mobility' | 'strengthening',
   });
 
-  const { scheduleTrainingNotification, cancelTrainingNotification } = useNotifications();
+  const { scheduleTrainingNotification, cancelTrainingNotification } =
+    useNotifications();
 
   const days = [
     'Lundi',
@@ -93,19 +95,19 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     const dayIndex = days.indexOf(dayName);
     const today = new Date();
     const currentDay = today.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
-    
+
     // Convertir l'index de jour (Lundi = 0) vers l'index JavaScript (Lundi = 1)
     const targetDay = dayIndex === 0 ? 1 : dayIndex + 1;
-    
+
     // Calculer le prochain jour de la semaine
     const daysUntilTarget = (targetDay - currentDay + 7) % 7;
     const nextDate = new Date(today);
     nextDate.setDate(today.getDate() + daysUntilTarget);
-    
+
     // Définir l'heure
     const [hours, minutes] = timeString.split(':').map(Number);
     nextDate.setHours(hours, minutes, 0, 0);
-    
+
     return nextDate;
   };
 
@@ -123,7 +125,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
       // Planifier les notifications
       const trainingDate = getNextWeekDate(selectedDay, alertForm.time);
       const typeInfo = trainingTypes.find(t => t.key === alertForm.type);
-      
+
       scheduleTrainingNotification({
         id: newAlert.id,
         title: `${typeInfo?.emoji} ${alertForm.label}`,
@@ -146,7 +148,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   const removeAlert = (alertId: string) => {
     // Annuler les notifications associées
     cancelTrainingNotification(alertId);
-    
+
     // Supprimer l'alerte
     onAlertsChange(alerts.filter(alert => alert.id !== alertId));
   };
@@ -175,60 +177,54 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
           <Text style={styles.cardTitle}>Cette semaine</Text>
         </View>
         <View style={styles.cardContent}>
-          <View style={styles.weeklyBars}>
-            {days.map((day, index) => {
-              const dayAlerts = getDayAlerts(day);
-              return (
-                <View key={day} style={styles.dayColumn}>
-                  {/* Day Bar */}
-                  <TouchableOpacity
-                    style={styles.dayBar}
-                    onPress={() => handleBarClick(day)}
-                    activeOpacity={0.7}
-                  >
-                    {/* Alert Dots */}
-                    {dayAlerts.map(alert => (
-                      <View
-                        key={alert.id}
-                        style={[
-                          styles.alertDot,
-                          {
-                            backgroundColor: alert.color,
-                            top: `${timeToPosition(alert.time)}%`,
-                          },
-                        ]}
+          <View style={styles.weeklyBarsContainer}>
+            <View style={styles.weeklyBars}>
+              {days.map((day, index) => {
+                const dayAlerts = getDayAlerts(day);
+                return (
+                  <View key={day} style={styles.dayColumn}>
+                    {/* Day Bar */}
+                    <TouchableOpacity
+                      style={styles.dayBarContainer}
+                      onPress={() => handleBarClick(day)}
+                      activeOpacity={0.7}
+                    >
+                      <LinearGradient
+                        colors={['#000000', '#FFFFFF', '#FFFFFF', '#000000']}
+                        locations={[0, 0.25, 0.75, 1]}
+                        style={styles.dayBar}
                       >
-                        <View style={styles.tooltip}>
-                          <Text style={styles.tooltipText}>
-                            {alert.time} - {alert.label}
-                          </Text>
-                        </View>
-                      </View>
-                    ))}
+                        {/* Alert Dots */}
+                        {dayAlerts.map(alert => (
+                          <View
+                            key={alert.id}
+                            style={[
+                              styles.alertDot,
+                              {
+                                backgroundColor: alert.color,
+                                top: `${timeToPosition(alert.time)}%`,
+                              },
+                            ]}
+                          />
+                        ))}
+                      </LinearGradient>
+                    </TouchableOpacity>
 
-                    {/* Time markers */}
-                    <Text style={[styles.timeMarker, styles.timeMarker0]}>
-                      00:00
-                    </Text>
-                    <Text style={[styles.timeMarker, styles.timeMarker6]}>
-                      06:00
-                    </Text>
-                    <Text style={[styles.timeMarker, styles.timeMarker12]}>
-                      12:00
-                    </Text>
-                    <Text style={[styles.timeMarker, styles.timeMarker18]}>
-                      18:00
-                    </Text>
-                    <Text style={[styles.timeMarker, styles.timeMarker24]}>
-                      24:00
-                    </Text>
-                  </TouchableOpacity>
+                    {/* Day Name */}
+                    <Text style={styles.dayName}>{day.slice(0, 3)}</Text>
+                  </View>
+                );
+              })}
+            </View>
 
-                  {/* Day Name */}
-                  <Text style={styles.dayName}>{day.slice(0, 3)}</Text>
-                </View>
-              );
-            })}
+            {/* Time Markers */}
+            <View style={styles.timeMarkers}>
+              <Text style={styles.timeMarker}>24h</Text>
+              <Text style={styles.timeMarker}>18h</Text>
+              <Text style={styles.timeMarker}>12h</Text>
+              <Text style={styles.timeMarker}>6h</Text>
+              <Text style={styles.timeMarker}>0h</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -431,78 +427,60 @@ const styles = StyleSheet.create({
   cardContent: {
     padding: 16,
   },
+  weeklyBarsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
   weeklyBars: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flex: 1,
     height: 200,
+    marginRight: 20,
   },
   dayColumn: {
     flex: 1,
     alignItems: 'center',
     marginHorizontal: 2,
   },
-  dayBar: {
-    width: '100%',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
+  dayBarContainer: {
     flex: 1,
-    marginBottom: 8,
+    alignItems: 'center',
+  },
+  dayBar: {
+    width: 2,
+    borderRadius: 1,
+    flex: 1,
     position: 'relative',
   },
   alertDot: {
     position: 'absolute',
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1,
     borderColor: '#FFFFFF',
     left: '50%',
-    marginLeft: -6,
-    marginTop: -6,
+    marginLeft: -4,
+    marginTop: -4,
     zIndex: 2,
-  },
-  tooltip: {
-    position: 'absolute',
-    backgroundColor: '#000',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    bottom: '100%',
-    left: '50%',
-    marginLeft: -50,
-    marginBottom: 8,
-    opacity: 0,
-  },
-  tooltipText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    textAlign: 'center',
-  },
-  timeMarker: {
-    position: 'absolute',
-    fontSize: 10,
-    color: '#999',
-    left: -30,
-  },
-  timeMarker0: {
-    top: 0,
-  },
-  timeMarker6: {
-    top: '25%',
-  },
-  timeMarker12: {
-    top: '50%',
-  },
-  timeMarker18: {
-    top: '75%',
-  },
-  timeMarker24: {
-    bottom: 0,
   },
   dayName: {
     fontSize: 12,
     fontWeight: '500',
     color: '#333',
+    marginTop: 8,
+  },
+  timeMarkers: {
+    width: 30,
+    height: 200,
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  timeMarker: {
+    fontSize: 10,
+    color: '#999',
+    fontWeight: '500',
   },
   alertsList: {
     maxHeight: 200,

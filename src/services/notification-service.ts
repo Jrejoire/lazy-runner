@@ -1,4 +1,10 @@
-import PushNotification from 'react-native-push-notification';
+import notifee, {
+  AndroidImportance,
+  AndroidColor,
+  TriggerType,
+  Trigger,
+  EventType,
+} from '@notifee/react-native';
 import { Platform } from 'react-native';
 
 interface NotificationData {
@@ -14,7 +20,7 @@ class NotificationService {
   private static instance: NotificationService;
 
   private constructor() {
-    this.configurePushNotifications();
+    this.configureNotifications();
   }
 
   static getInstance(): NotificationService {
@@ -24,192 +30,189 @@ class NotificationService {
     return NotificationService.instance;
   }
 
-  private configurePushNotifications() {
-    // Configuration des notifications
-    PushNotification.configure({
-      // (optionnel) Appelé quand Token est généré (iOS et Android)
-      onRegister: function (token) {
-        console.log('TOKEN:', token);
-      },
-
-      // (requis) Appelé quand une notification est reçue ou ouverte
-      onNotification: function (notification) {
-        console.log('NOTIFICATION:', notification);
-      },
-
-      // (optionnel) Appelé quand l'action est pressée
-      onAction: function (notification) {
-        console.log('ACTION:', notification.action);
-        console.log('NOTIFICATION:', notification);
-      },
-
-      // (optionnel) Appelé quand l'utilisateur appuie sur la notification
-      onRegistrationError: function (err) {
-        console.error(err.message, err);
-      },
-
-      // Permissions (requis pour iOS)
-      permissions: {
-        alert: true,
-        badge: true,
-        sound: true,
-      },
-
-      // Pop initial notification
-      popInitialNotification: true,
-
-      // (optionnel) Par défaut: true
-      requestPermissions: Platform.OS === 'ios',
-    });
-
-    // Configuration des canaux pour Android
+  private async configureNotifications() {
+    // Créer le canal pour Android
     if (Platform.OS === 'android') {
-      PushNotification.createChannel(
-        {
-          channelId: 'training-reminders',
-          channelName: 'Rappels d\'entraînement',
-          channelDescription: 'Notifications pour les rappels d\'entraînements',
-          playSound: true,
-          soundName: 'default',
-          importance: 4, // IMPORTANCE_HIGH
-          vibrate: true,
-        },
-        (created) => console.log(`Canal créé: ${created}`),
-      );
+      await notifee.createChannel({
+        id: 'training',
+        name: 'LazyRunner',
+        description: 'Notifications pour les entraînements',
+        importance: AndroidImportance.HIGH,
+        color: AndroidColor.GREEN,
+        sound: 'default',
+        vibration: true,
+      });
+    }
+  }
 
-      PushNotification.createChannel(
+  async requestPermissions(): Promise<boolean> {
+    try {
+      const authStatus = await notifee.requestPermission();
+      return authStatus.authorizationStatus === 1; // 1 = AUTHORIZED
+    } catch (error) {
+      console.error('Erreur lors de la demande de permissions:', error);
+      return false;
+    }
+  }
+
+  async scheduleTrainingReminder(data: {
+    id: string;
+    title: string;
+    message: string;
+    date: Date;
+    trainingType: 'running' | 'mobility' | 'strengthening';
+  }): Promise<void> {
+    try {
+      // Programmer 30 minutes avant
+      const reminderDate = new Date(data.date.getTime() - 30 * 60 * 1000);
+
+      const trigger: Trigger = {
+        type: TriggerType.TIMESTAMP,
+        timestamp: reminderDate.getTime(),
+      };
+
+      await notifee.createTriggerNotification(
         {
-          channelId: 'training-start',
-          channelName: 'Début d\'entraînement',
-          channelDescription: 'Notifications pour le début des entraînements',
-          playSound: true,
-          soundName: 'default',
-          importance: 4, // IMPORTANCE_HIGH
-          vibrate: true,
+          title: `⏰ Rappel: ${data.title}`,
+          body: `Votre séance de ${data.trainingType} commence dans 30 minutes`,
+          android: {
+            channelId: 'training',
+            importance: AndroidImportance.HIGH,
+            color: AndroidColor.GREEN,
+            pressAction: {
+              id: 'default',
+            },
+          },
+          ios: {
+            sound: 'default',
+          },
         },
-        (created) => console.log(`Canal créé: ${created}`),
+        trigger,
+      );
+    } catch (error) {
+      console.error('Erreur lors de la programmation du rappel:', error);
+    }
+  }
+
+  async scheduleTrainingStart(data: {
+    id: string;
+    title: string;
+    message: string;
+    date: Date;
+    trainingType: 'running' | 'mobility' | 'strengthening';
+  }): Promise<void> {
+    try {
+      const trigger: Trigger = {
+        type: TriggerType.TIMESTAMP,
+        timestamp: data.date.getTime(),
+      };
+
+      await notifee.createTriggerNotification(
+        {
+          title: `🏃‍♂️ ${data.title}`,
+          body: `C'est l'heure de votre séance de ${data.trainingType} !`,
+          android: {
+            channelId: 'training',
+            importance: AndroidImportance.HIGH,
+            color: AndroidColor.BLUE,
+            pressAction: {
+              id: 'default',
+            },
+          },
+          ios: {
+            sound: 'default',
+          },
+        },
+        trigger,
+      );
+    } catch (error) {
+      console.error(
+        'Erreur lors de la programmation de la notification:',
+        error,
       );
     }
   }
 
-  // Demander les permissions
-  async requestPermissions(): Promise<boolean> {
-    return new Promise((resolve) => {
-      PushNotification.requestPermissions().then((permissions) => {
-        console.log('Permissions:', permissions);
-        resolve(permissions.alert || false);
+  async scheduleTrainingNotifications(data: {
+    id: string;
+    title: string;
+    message: string;
+    date: Date;
+    trainingType: 'running' | 'mobility' | 'strengthening';
+  }): Promise<void> {
+    // Programmer le rappel (30 min avant)
+    await this.scheduleTrainingReminder(data);
+
+    // Programmer la notification de début
+    await this.scheduleTrainingStart(data);
+  }
+
+  async cancelNotification(notificationId: string): Promise<void> {
+    try {
+      // Récupérer toutes les notifications programmées
+      const scheduledNotifications = await notifee.getTriggerNotificationIds();
+
+      // Annuler les notifications qui correspondent à l'ID
+      for (const id of scheduledNotifications) {
+        if (id.includes(notificationId)) {
+          await notifee.cancelTriggerNotification(id);
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'annulation de la notification:", error);
+    }
+  }
+
+  async cancelAllNotifications(): Promise<void> {
+    try {
+      await notifee.cancelAllNotifications();
+    } catch (error) {
+      console.error(
+        "Erreur lors de l'annulation de toutes les notifications:",
+        error,
+      );
+    }
+  }
+
+  async getScheduledNotifications(): Promise<any[]> {
+    try {
+      const notificationIds = await notifee.getTriggerNotificationIds();
+      return notificationIds;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des notifications:', error);
+      return [];
+    }
+  }
+
+  async showImmediateNotification(
+    title: string,
+    message: string,
+  ): Promise<void> {
+    try {
+      await notifee.displayNotification({
+        title,
+        body: message,
+        android: {
+          channelId: 'training',
+          importance: AndroidImportance.HIGH,
+          color: AndroidColor.GREEN,
+          pressAction: {
+            id: 'default',
+          },
+        },
+        ios: {
+          sound: 'default',
+        },
       });
-    });
+    } catch (error) {
+      console.error("Erreur lors de l'affichage de la notification:", error);
+    }
   }
 
-  // Planifier une notification de rappel (30 min avant)
-  scheduleTrainingReminder(data: {
-    id: string;
-    title: string;
-    message: string;
-    date: Date;
-    trainingType: 'running' | 'mobility' | 'strengthening';
-  }): void {
-    const reminderDate = new Date(data.date.getTime() - 30 * 60 * 1000); // 30 min avant
-
-    PushNotification.localNotificationSchedule({
-      id: `reminder_${data.id}`,
-      channelId: 'training-reminders',
-      title: data.title,
-      message: data.message,
-      date: reminderDate,
-      allowWhileIdle: true,
-      repeatType: 'day',
-      number: 1,
-      userInfo: {
-        type: 'reminder',
-        trainingType: data.trainingType,
-        originalDate: data.date.toISOString(),
-      },
-    });
-
-    console.log(`Rappel planifié pour ${reminderDate.toLocaleString()}`);
-  }
-
-  // Planifier une notification de début d'entraînement
-  scheduleTrainingStart(data: {
-    id: string;
-    title: string;
-    message: string;
-    date: Date;
-    trainingType: 'running' | 'mobility' | 'strengthening';
-  }): void {
-    PushNotification.localNotificationSchedule({
-      id: `start_${data.id}`,
-      channelId: 'training-start',
-      title: data.title,
-      message: data.message,
-      date: data.date,
-      allowWhileIdle: true,
-      repeatType: 'day',
-      number: 1,
-      userInfo: {
-        type: 'start',
-        trainingType: data.trainingType,
-        originalDate: data.date.toISOString(),
-      },
-    });
-
-    console.log(`Début d'entraînement planifié pour ${data.date.toLocaleString()}`);
-  }
-
-  // Planifier les notifications pour un entraînement
-  scheduleTrainingNotifications(data: {
-    id: string;
-    title: string;
-    message: string;
-    date: Date;
-    trainingType: 'running' | 'mobility' | 'strengthening';
-  }): void {
-    // Notification de rappel (30 min avant)
-    this.scheduleTrainingReminder(data);
-    
-    // Notification de début d'entraînement
-    this.scheduleTrainingStart(data);
-  }
-
-  // Annuler une notification
-  cancelNotification(notificationId: string): void {
-    PushNotification.cancelLocalNotification(notificationId);
-  }
-
-  // Annuler toutes les notifications
-  cancelAllNotifications(): void {
-    PushNotification.cancelAllLocalNotifications();
-  }
-
-  // Obtenir les notifications planifiées
-  getScheduledNotifications(): Promise<any[]> {
-    return new Promise((resolve) => {
-      PushNotification.getScheduledLocalNotifications((notifications) => {
-        resolve(notifications || []);
-      });
-    });
-  }
-
-  // Notification immédiate (pour les tests)
-  showImmediateNotification(title: string, message: string): void {
-    PushNotification.localNotification({
-      channelId: 'training-reminders',
-      title,
-      message,
-      playSound: true,
-      soundName: 'default',
-      importance: 'high',
-      vibrate: true,
-    });
-  }
-
-  // Notification de test
-  testNotification(): void {
-    this.showImmediateNotification(
+  async testNotification(): Promise<void> {
+    await this.showImmediateNotification(
       'Test LazyRunner',
-      'Les notifications fonctionnent parfaitement ! 🏃‍♂️'
+      'Cette notification de test confirme que les notifications fonctionnent !',
     );
   }
 }

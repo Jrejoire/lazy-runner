@@ -1,14 +1,12 @@
 import React from 'react';
-import { StatusBar, useColorScheme } from 'react-native';
-import { AppNavigator } from './src/navigation/app-navigator';
+import { StatusBar } from 'react-native';
+import { Root } from './src/screens/root';
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
   return (
     <>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppNavigator />
+      <StatusBar barStyle="light-content" backgroundColor="#4CAF50" />
+      <Root />
     </>
   );
 }

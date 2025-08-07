@@ -12,18 +12,21 @@ export const useNotifications = () => {
   const initializeNotifications = async () => {
     try {
       setIsLoading(true);
-      const notificationService = NotificationService.getInstance();
-      const permission = await notificationService.requestPermissions();
+      const permission =
+        await NotificationService.getInstance().requestPermissions();
       setHasPermission(permission);
     } catch (error) {
-      console.error('Erreur lors de l\'initialisation des notifications:', error);
+      console.error(
+        "Erreur lors de l'initialisation des notifications:",
+        error,
+      );
       setHasPermission(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const scheduleTrainingNotification = (data: {
+  const scheduleTrainingNotification = async (data: {
     id: string;
     title: string;
     message: string;
@@ -31,46 +34,50 @@ export const useNotifications = () => {
     trainingType: 'running' | 'mobility' | 'strengthening';
   }) => {
     try {
-      const notificationService = NotificationService.getInstance();
-      notificationService.scheduleTrainingNotifications(data);
+      await NotificationService.getInstance().scheduleTrainingNotifications(
+        data,
+      );
     } catch (error) {
-      console.error('Erreur lors de la planification de la notification:', error);
+      console.error(
+        'Erreur lors de la programmation de la notification:',
+        error,
+      );
     }
   };
 
-  const cancelTrainingNotification = (notificationId: string) => {
+  const cancelTrainingNotification = async (notificationId: string) => {
     try {
-      const notificationService = NotificationService.getInstance();
-      notificationService.cancelNotification(`reminder_${notificationId}`);
-      notificationService.cancelNotification(`start_${notificationId}`);
+      await NotificationService.getInstance().cancelNotification(
+        notificationId,
+      );
     } catch (error) {
-      console.error('Erreur lors de l\'annulation de la notification:', error);
+      console.error("Erreur lors de l'annulation de la notification:", error);
     }
   };
 
-  const cancelAllNotifications = () => {
+  const cancelAllNotifications = async () => {
     try {
-      const notificationService = NotificationService.getInstance();
-      notificationService.cancelAllNotifications();
+      await NotificationService.getInstance().cancelAllNotifications();
     } catch (error) {
-      console.error('Erreur lors de l\'annulation de toutes les notifications:', error);
+      console.error(
+        "Erreur lors de l'annulation de toutes les notifications:",
+        error,
+      );
     }
   };
 
   const getScheduledNotifications = async () => {
     try {
-      const notificationService = NotificationService.getInstance();
-      return await notificationService.getScheduledNotifications();
+      return await NotificationService.getInstance().getScheduledNotifications();
     } catch (error) {
       console.error('Erreur lors de la récupération des notifications:', error);
       return [];
     }
   };
 
-  const testNotification = () => {
+  const testNotification = async () => {
     try {
-      const notificationService = NotificationService.getInstance();
-      notificationService.testNotification();
+      await NotificationService.getInstance().testNotification();
     } catch (error) {
       console.error('Erreur lors du test de notification:', error);
     }
