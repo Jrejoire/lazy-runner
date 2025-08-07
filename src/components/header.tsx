@@ -1,77 +1,79 @@
-import React from 'react';
-import { View, Text, StyleSheet, Platform, StatusBar } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Platform,
+  StatusBar,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
+import { InfoModal } from './info-modal';
+import { COLORS } from '../constantes/color.constante';
 
-interface HeaderProps {
-  title: string;
-  subtitle?: string;
-  showBackButton?: boolean;
-  onBackPress?: () => void;
-}
+export default function Header() {
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
-export const Header: React.FC<HeaderProps> = ({
-  title,
-  subtitle,
-  showBackButton = false,
-  onBackPress,
-}) => {
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#4CAF50" />
-      <View style={styles.content}>
-        {showBackButton && (
-          <View style={styles.backButton}>
-            {/* Back button icon could be added here */}
-          </View>
-        )}
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-        </View>
+      <View>
+        <Text style={styles.logoText}>LR</Text>
       </View>
+
+      <View>
+        <Text style={styles.title}>Lazy</Text>
+        <Text style={styles.title2}>Runner</Text>
+      </View>
+
+      <View>
+        <TouchableOpacity
+          style={styles.infoButton}
+          onPress={() => setShowInfoModal(!showInfoModal)}
+        >
+          <Text style={styles.infoIcon}>💡</Text>
+        </TouchableOpacity>
+      </View>
+
+      <InfoModal
+        visible={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+      />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#4CAF50',
     paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 0,
     paddingBottom: 16,
-    paddingHorizontal: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  content: {
+    height: 100,
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 44,
+    justifyContent: 'space-between',
   },
-  backButton: {
+  logoText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.PRIMARY,
+  },
+  infoButton: {
     width: 44,
     height: 44,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    justifyContent: 'center',
   },
-  titleContainer: {
-    flex: 1,
+  infoIcon: {
+    fontSize: 20,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
+    fontSize: 24,
+    color: COLORS.TEXT_SECONDARY,
+    marginLeft: -20,
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#E8F5E8',
-    textAlign: 'center',
-    marginTop: 2,
+  title2: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.PRIMARY,
+    marginLeft: -10,
   },
 });

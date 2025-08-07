@@ -12,8 +12,9 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     
-    // Mode immersif pour masquer seulement la barre de navigation
+    // Mode immersif pour masquer la barre de statut et la barre de navigation
     window.decorView.systemUiVisibility = (
+      View.SYSTEM_UI_FLAG_FULLSCREEN or
       View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
       View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
     )

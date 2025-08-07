@@ -1,100 +1,40 @@
 import React from 'react';
-import { Layout } from '../components/layout';
-import { HomeScreen } from './home-screen';
-import { MobilityScreen } from './mobility-screen';
-import { StrengtheningScreen } from './strengthening-screen';
-import { SessionScreen } from './session-screen';
-import { useNavigation, Screen } from '../hooks/useNavigation';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigationContainer } from '@react-navigation/native';
+import { StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-const footerTabs = [
-  {
-    key: 'home',
-    label: 'Accueil',
-    icon: '🏠',
-    isActive: true,
-    onPress: () => {},
-  },
-  {
-    key: 'mobility',
-    label: 'Mobilité',
-    icon: '🧘‍♀️',
-    isActive: false,
-    onPress: () => {},
-  },
-  {
-    key: 'strengthening',
-    label: 'Renforcement',
-    icon: '💪',
-    isActive: false,
-    onPress: () => {},
-  },
-];
+import HomeScreen from './home-screen';
+import MobilityScreen from './mobility-screen';
+import StrengtheningScreen from './strengthening-screen';
+import SessionScreen from './session-screen';
+import { RootStackParamList, SCREENS } from '../constantes/page.constance';
 
-export const Root: React.FC = () => {
-  const { currentScreen, navigate, goBack, canGoBack } = useNavigation();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
-  // Mettre à jour les onglets du footer
-  const updatedFooterTabs = footerTabs.map(tab => ({
-    ...tab,
-    isActive: tab.key === currentScreen,
-    onPress: () => navigate(tab.key as Screen),
-  }));
-
-  const getHeaderTitle = () => {
-    switch (currentScreen) {
-      case 'home':
-        return 'LazyRunner';
-      case 'mobility':
-        return 'Mobilité';
-      case 'strengthening':
-        return 'Renforcement';
-      case 'session':
-        return 'Séance en cours';
-      default:
-        return 'LazyRunner';
-    }
-  };
-
-  const getHeaderSubtitle = () => {
-    switch (currentScreen) {
-      case 'home':
-        return 'Votre coach personnel';
-      case 'mobility':
-        return 'Exercices de mobilité';
-      case 'strengthening':
-        return 'Exercices de renforcement';
-      case 'session':
-        return 'Entraînement en cours';
-      default:
-        return '';
-    }
-  };
-
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'home':
-        return <HomeScreen />;
-      case 'mobility':
-        return <MobilityScreen />;
-      case 'strengthening':
-        return <StrengtheningScreen />;
-      case 'session':
-        return <SessionScreen />;
-      default:
-        return <HomeScreen />;
-    }
-  };
-
+export default function RootStack() {
   return (
-    <Layout
-      headerTitle={getHeaderTitle()}
-      headerSubtitle={getHeaderSubtitle()}
-      showBackButton={canGoBack}
-      onBackPress={goBack}
-      footerTabs={updatedFooterTabs}
-      showFooter={currentScreen !== 'session'}
-    >
-      {renderScreen()}
-    </Layout>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar
+          translucent={true}
+          backgroundColor="transparent"
+          barStyle="light-content"
+          hidden={true}
+        />
+        <Stack.Navigator
+          initialRouteName={SCREENS.HOME}
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name={SCREENS.HOME} component={HomeScreen} />
+          <Stack.Screen name={SCREENS.MOBILITY} component={MobilityScreen} />
+          <Stack.Screen
+            name={SCREENS.STRENGTHENING}
+            component={StrengtheningScreen}
+          />
+          <Stack.Screen name={SCREENS.SESSION} component={SessionScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
-};
+}

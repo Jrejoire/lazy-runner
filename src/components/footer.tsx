@@ -1,33 +1,72 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-
-interface FooterTab {
-  key: string;
-  label: string;
-  icon: string;
-  isActive: boolean;
-  onPress: () => void;
-}
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from 'react-native';
+import { COLORS } from '../constantes/color.constante';
 
 interface FooterProps {
-  tabs: FooterTab[];
+  activeTab?: string;
+  onTabPress?: (tabName: string) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ tabs }) => {
+interface TabItem {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+export const Footer: React.FC<FooterProps> = ({
+  activeTab = 'home',
+  onTabPress,
+}) => {
+  const handleTabPress = (tabName: string) => {
+    if (onTabPress) {
+      onTabPress(tabName);
+    }
+  };
+
+  const tabs: TabItem[] = [
+    {
+      id: 'home',
+      name: 'Accueil',
+      icon: '🏠',
+    },
+    {
+      id: 'mobility',
+      name: 'Mobilité',
+      icon: '⚡',
+    },
+    {
+      id: 'strengthening',
+      name: 'Renforcement',
+      icon: '🔥',
+    },
+  ];
+
   return (
     <View style={styles.container}>
-      {tabs.map((tab) => (
+      {tabs.map(tab => (
         <TouchableOpacity
-          key={tab.key}
+          key={tab.id}
           style={styles.tab}
-          onPress={tab.onPress}
-          activeOpacity={0.7}
+          onPress={() => handleTabPress(tab.id)}
         >
-          <Text style={[styles.icon, tab.isActive && styles.iconActive]}>
+          <Text
+            style={[styles.icon, activeTab === tab.id && styles.activeIcon]}
+          >
             {tab.icon}
           </Text>
-          <Text style={[styles.label, tab.isActive && styles.labelActive]}>
-            {tab.label}
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === tab.id && styles.activeTabText,
+            ]}
+          >
+            {tab.name}
           </Text>
         </TouchableOpacity>
       ))}
@@ -37,43 +76,37 @@ export const Footer: React.FC<FooterProps> = ({ tabs }) => {
 
 const styles = StyleSheet.create({
   container: {
+    height: 80,
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: COLORS.CARD_BACKGROUND,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    paddingBottom: Platform.OS === 'android' ? 20 : 8,
-    paddingTop: 8,
-    height: Platform.OS === 'android' ? 80 : 60,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
+    borderTopColor: COLORS.BORDER_LIGHT,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   tab: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    flex: 1,
   },
   icon: {
     fontSize: 24,
     marginBottom: 4,
-    color: '#666',
   },
-  iconActive: {
-    color: '#4CAF50',
+  activeIcon: {
+    transform: [{ scale: 1.1 }],
   },
-  label: {
+  tabText: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#666',
-    textAlign: 'center',
+    color: COLORS.TAB_INACTIVE,
   },
-  labelActive: {
-    color: '#4CAF50',
+  activeTabText: {
+    color: COLORS.TAB_ACTIVE,
     fontWeight: '600',
   },
 });
