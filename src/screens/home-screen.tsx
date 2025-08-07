@@ -1,19 +1,19 @@
 import React from 'react';
-import { Text, StyleSheet } from 'react-native';
-import { Layout } from '../components';
-import { COLORS } from '../constantes/color.constante';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Layout, WelcomeHeader, WeeklyPlanner } from '../components';
 
 export default function HomeScreen() {
   return (
     <Layout>
-      <Text style={styles.text}>Home</Text>
+      <ScrollView contentContainerStyle={styles.container}>
+        <WelcomeHeader />
+
+        <WeeklyPlanner alerts={[]} onAlertsChange={() => {}} />
+      </ScrollView>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  text: {
-    fontSize: 24,
-    color: COLORS.TEXT_PRIMARY,
-  },
+  container: {},
 });

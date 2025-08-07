@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -8,36 +8,27 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
-import { InfoModal } from './info-modal';
 import { COLORS } from '../constantes/color.constante';
 
 export default function Header() {
-  const [showInfoModal, setShowInfoModal] = useState(false);
+  const headerLogo = require('../../public/logos/LR-logo-carre.png');
+  const headerText = require('../../public/logos/LR-name.png');
 
   return (
     <View style={styles.container}>
       <View>
-        <Text style={styles.logoText}>LR</Text>
+        <Image source={headerLogo} style={styles.logo} />
       </View>
 
       <View>
-        <Text style={styles.title}>Lazy</Text>
-        <Text style={styles.title2}>Runner</Text>
+        <Image source={headerText} style={styles.logoText} />
       </View>
 
       <View>
-        <TouchableOpacity
-          style={styles.infoButton}
-          onPress={() => setShowInfoModal(!showInfoModal)}
-        >
+        <TouchableOpacity style={styles.infoButton}>
           <Text style={styles.infoIcon}>💡</Text>
         </TouchableOpacity>
       </View>
-
-      <InfoModal
-        visible={showInfoModal}
-        onClose={() => setShowInfoModal(false)}
-      />
     </View>
   );
 }
@@ -50,11 +41,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    backgroundColor: COLORS.background,
+  },
+  logo: {
+    width: 80,
+    height: 80,
   },
   logoText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.PRIMARY,
+    width: 120,
+    height: 60,
+    marginTop: 10,
   },
   infoButton: {
     width: 44,
@@ -67,13 +63,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    color: COLORS.TEXT_SECONDARY,
+    color: COLORS.noir,
     marginLeft: -20,
   },
   title2: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.PRIMARY,
+    color: COLORS.orange,
     marginLeft: -10,
   },
 });

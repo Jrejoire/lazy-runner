@@ -80,9 +80,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: COLORS.CARD_BACKGROUND,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.BORDER_LIGHT,
+    backgroundColor: COLORS.background,
     paddingBottom: Platform.OS === 'ios' ? 20 : 10,
     position: 'absolute',
     bottom: 0,
@@ -99,14 +97,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   activeIcon: {
-    transform: [{ scale: 1.1 }],
+    transform: [{ scale: 1.2 }],
   },
   tabText: {
     fontSize: 12,
-    color: COLORS.TAB_INACTIVE,
+    color: COLORS.gris_fonce,
   },
   activeTabText: {
-    color: COLORS.TAB_ACTIVE,
-    fontWeight: '600',
+    color: COLORS.orange,
+    fontWeight: 'bold',
   },
 });

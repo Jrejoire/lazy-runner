@@ -27,10 +27,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: COLORS.background,
+    padding: 10,
   },
   content: {
     flex: 1,
-    paddingBottom: 0, // Footer will handle the bottom spacing
+    paddingBottom: 0,
   },
 });

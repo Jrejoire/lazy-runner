@@ -6,6 +6,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { COLORS } from '../constantes/color.constante';
 
 interface ButtonProps {
   title: string;
@@ -52,12 +53,12 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   primary: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.orange,
   },
   secondary: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#4CAF50',
+    borderColor: COLORS.orange,
   },
   danger: {
     backgroundColor: '#F44336',
@@ -73,7 +74,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   secondaryText: {
-    color: '#4CAF50',
+    color: COLORS.orange,
   },
   dangerText: {
     color: '#FFFFFF',

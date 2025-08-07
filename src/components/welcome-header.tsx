@@ -1,23 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-interface WelcomeHeaderProps {
-  title: string;
-  subtitle: string;
-  emoji?: string;
-}
-
-export const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
-  title,
-  subtitle,
-  emoji = '👟',
-}) => {
+export const WelcomeHeader: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
-        {title} {emoji}
+        Bienvenue à toi, coureur faineant mais motivé !
       </Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <Text style={styles.subtitle}>
+        Courir, c'est cool, mais faire du renfo ou de la mobilité, c'est un peu
+        relou, on ne va pas se mentir. Mais bon, on va quand même essayer, non ?
+      </Text>
     </View>
   );
 };
@@ -28,14 +21,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   title: {
-    fontSize: 24,
     fontWeight: 'bold',
-    color: '#1a1a1a',
     marginBottom: 8,
+    fontSize: 18,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    fontSize: 14,
+    textAlign: 'justify',
   },
 });

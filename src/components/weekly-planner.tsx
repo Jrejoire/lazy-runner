@@ -1,18 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   Modal,
   TextInput,
-  Platform,
+  Alert,
+  ScrollView,
 } from 'react-native';
-import { Alert } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { Button } from './button';
-import { useNotifications } from '../hooks/useNotifications';
+import { COLORS } from '../constantes/color.constante';
 
 interface TrainingAlert {
   id: string;
@@ -33,308 +31,262 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   onAlertsChange,
 }) => {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [selectedAlert, setSelectedAlert] = useState<TrainingAlert | null>(
+    null,
+  );
   const [alertForm, setAlertForm] = useState({
     time: '',
     label: '',
-    color: '#3b82f6',
+    color: '#FF6B35',
     type: 'running' as 'running' | 'mobility' | 'strengthening',
   });
-
-  const { scheduleTrainingNotification, cancelTrainingNotification } =
-    useNotifications();
+  const [selectedHour, setSelectedHour] = useState(12);
+  const [selectedMinute, setSelectedMinute] = useState(0);
+  const [hourScrollView, setHourScrollView] = useState<ScrollView | null>(null);
+  const [minuteScrollView, setMinuteScrollView] = useState<ScrollView | null>(
+    null,
+  );
 
   const days = [
-    'Lundi',
-    'Mardi',
-    'Mercredi',
-    'Jeudi',
-    'Vendredi',
-    'Samedi',
-    'Dimanche',
-  ];
-
-  const colors = [
-    '#3b82f6', // blue
-    '#10b981', // green
-    '#f59e0b', // orange
-    '#ef4444', // red
-    '#8b5cf6', // purple
-    '#ec4899', // pink
-    '#06b6d4', // cyan
+    'lundi',
+    'mardi',
+    'mercredi',
+    'jeudi',
+    'vendredi',
+    'samedi',
+    'dimanche',
   ];
 
   const trainingTypes = [
-    { key: 'running', label: 'Course', emoji: '🏃‍♂️', color: '#3b82f6' },
-    { key: 'mobility', label: 'Mobilité', emoji: '🧘‍♀️', color: '#10b981' },
+    { key: 'running', label: 'Course', emoji: '🏃‍♂️', color: '#FF6B35' },
+    { key: 'mobility', label: 'Mobilité', emoji: '🧘‍♀️', color: '#4CAF50' },
     {
       key: 'strengthening',
       label: 'Renforcement',
       emoji: '💪',
-      color: '#f59e0b',
+      color: '#F44336',
     },
   ];
 
   const timeToPosition = (timeString: string): number => {
     const [hours, minutes] = timeString.split(':').map(Number);
     const totalMinutes = hours * 60 + minutes;
-    // Convert to percentage (0% = midnight, 100% = 11:59 PM)
     return (totalMinutes / (24 * 60)) * 100;
   };
 
   const handleBarClick = (day: string) => {
     setSelectedDay(day);
+    setSelectedAlert(null);
+    setSelectedHour(12);
+    setSelectedMinute(0);
     setAlertForm({
       time: '',
       label: '',
-      color: '#3b82f6',
+      color: '#FF6B35',
       type: 'running',
     });
   };
 
-  const getNextWeekDate = (dayName: string, timeString: string): Date => {
-    const dayIndex = days.indexOf(dayName);
-    const today = new Date();
-    const currentDay = today.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
+  const handleAlertClick = (alert: TrainingAlert) => {
+    setSelectedAlert(alert);
+    setSelectedDay(alert.day);
 
-    // Convertir l'index de jour (Lundi = 0) vers l'index JavaScript (Lundi = 1)
-    const targetDay = dayIndex === 0 ? 1 : dayIndex + 1;
+    // Parser l'heure existante pour définir les pickers
+    const [hours, minutes] = alert.time.split(':').map(Number);
+    setSelectedHour(hours);
+    setSelectedMinute(minutes);
 
-    // Calculer le prochain jour de la semaine
-    const daysUntilTarget = (targetDay - currentDay + 7) % 7;
-    const nextDate = new Date(today);
-    nextDate.setDate(today.getDate() + daysUntilTarget);
-
-    // Définir l'heure
-    const [hours, minutes] = timeString.split(':').map(Number);
-    nextDate.setHours(hours, minutes, 0, 0);
-
-    return nextDate;
+    setAlertForm({
+      time: alert.time,
+      label: alert.label,
+      color: alert.color,
+      type: alert.type,
+    });
   };
 
-  const handleSaveAlert = () => {
-    if (selectedDay && alertForm.time && alertForm.label) {
-      const newAlert: TrainingAlert = {
-        id: Date.now().toString(),
-        day: selectedDay,
-        time: alertForm.time,
-        label: alertForm.label,
-        color: alertForm.color,
-        type: alertForm.type,
-      };
+  const handleSave = () => {
+    if (!selectedDay) return;
 
-      // Planifier les notifications
-      const trainingDate = getNextWeekDate(selectedDay, alertForm.time);
-      const typeInfo = trainingTypes.find(t => t.key === alertForm.type);
+    const timeString = `${selectedHour
+      .toString()
+      .padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
 
-      scheduleTrainingNotification({
-        id: newAlert.id,
-        title: `${typeInfo?.emoji} ${alertForm.label}`,
-        message: `C'est l'heure de votre ${typeInfo?.label.toLowerCase()} !`,
-        date: trainingDate,
-        trainingType: alertForm.type,
-      });
+    const newAlert: TrainingAlert = {
+      id: selectedAlert?.id || Date.now().toString(),
+      day: selectedDay,
+      time: timeString,
+      label: alertForm.label,
+      color: alertForm.color,
+      type: alertForm.type,
+    };
 
+    if (selectedAlert) {
+      // Modifier un entraînement existant
+      const updatedAlerts = alerts.map(alert =>
+        alert.id === selectedAlert.id ? newAlert : alert,
+      );
+      onAlertsChange(updatedAlerts);
+    } else {
+      // Ajouter un nouvel entraînement
       onAlertsChange([...alerts, newAlert]);
+    }
+
+    // Reset du formulaire
+    setSelectedDay(null);
+    setSelectedAlert(null);
+    setAlertForm({
+      time: '',
+      label: '',
+      color: '#FF6B35',
+      type: 'running',
+    });
+  };
+
+  const handleDeleteAlert = () => {
+    if (selectedAlert) {
+      onAlertsChange(alerts.filter(alert => alert.id !== selectedAlert.id));
       setSelectedDay(null);
+      setSelectedAlert(null);
       setAlertForm({
         time: '',
         label: '',
-        color: '#3b82f6',
+        color: '#FF6B35',
         type: 'running',
       });
     }
-  };
-
-  const removeAlert = (alertId: string) => {
-    // Annuler les notifications associées
-    cancelTrainingNotification(alertId);
-
-    // Supprimer l'alerte
-    onAlertsChange(alerts.filter(alert => alert.id !== alertId));
   };
 
   const getDayAlerts = (day: string) => {
     return alerts.filter(alert => alert.day === day);
   };
 
-  const getTrainingTypeInfo = (type: string) => {
-    return trainingTypes.find(t => t.key === type) || trainingTypes[0];
+  const handleHourScroll = (event: any) => {
+    const y = event.nativeEvent.contentOffset.y;
+    const itemHeight = 40; // Hauteur exacte d'un item
+    const newHour = Math.round(y / itemHeight);
+    if (newHour >= 0 && newHour < 24 && newHour !== selectedHour) {
+      setSelectedHour(newHour);
+    }
   };
+
+  const handleMinuteScroll = (event: any) => {
+    const y = event.nativeEvent.contentOffset.y;
+    const itemHeight = 40; // Hauteur exacte d'un item
+    const newMinute = Math.round(y / itemHeight);
+    if (newMinute >= 0 && newMinute < 60 && newMinute !== selectedMinute) {
+      setSelectedMinute(newMinute);
+    }
+  };
+
+  const snapToHour = (hour: number) => {
+    if (hourScrollView) {
+      hourScrollView.scrollTo({ y: hour * 40, animated: true });
+    }
+  };
+
+  const snapToMinute = (minute: number) => {
+    if (minuteScrollView) {
+      minuteScrollView.scrollTo({ y: minute * 40, animated: true });
+    }
+  };
+
+  // Centrer automatiquement les valeurs quand le modal s'ouvre
+  useEffect(() => {
+    if (selectedDay !== null) {
+      // Petit délai pour laisser le modal se rendre
+      setTimeout(() => {
+        snapToHour(selectedHour);
+        snapToMinute(selectedMinute);
+      }, 100);
+    }
+  }, [selectedDay]);
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Planificateur Hebdomadaire 📅</Text>
-        <Text style={styles.subtitle}>
-          Planifiez vos entraînements de la semaine
-        </Text>
-      </View>
-
-      {/* Weekly Bars */}
       <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Cette semaine</Text>
-        </View>
-        <View style={styles.cardContent}>
-          <View style={styles.weeklyBarsContainer}>
-            <View style={styles.weeklyBars}>
-              {days.map((day, index) => {
-                const dayAlerts = getDayAlerts(day);
-                return (
-                  <View key={day} style={styles.dayColumn}>
-                    {/* Day Bar */}
-                    <TouchableOpacity
-                      style={styles.dayBarContainer}
-                      onPress={() => handleBarClick(day)}
-                      activeOpacity={0.7}
-                    >
-                      <LinearGradient
-                        colors={['#000000', '#FFFFFF', '#FFFFFF', '#000000']}
-                        locations={[0, 0.25, 0.75, 1]}
-                        style={styles.dayBar}
-                      >
-                        {/* Alert Dots */}
-                        {dayAlerts.map(alert => (
-                          <View
-                            key={alert.id}
-                            style={[
-                              styles.alertDot,
-                              {
-                                backgroundColor: alert.color,
-                                top: `${timeToPosition(alert.time)}%`,
-                              },
-                            ]}
-                          />
-                        ))}
-                      </LinearGradient>
-                    </TouchableOpacity>
-
-                    {/* Day Name */}
-                    <Text style={styles.dayName}>{day.slice(0, 3)}</Text>
+        <View style={styles.weeklyBarsContainer}>
+          <View style={styles.weeklyBars}>
+            {days.map(day => {
+              const dayAlerts = getDayAlerts(day);
+              return (
+                <TouchableOpacity
+                  key={day}
+                  style={styles.dayBarContainer}
+                  onPress={() => handleBarClick(day)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.dayBar}>
+                    {dayAlerts.map(alert => (
+                      <TouchableOpacity
+                        key={alert.id}
+                        style={[
+                          styles.alertDot,
+                          {
+                            backgroundColor: alert.color,
+                            top: `${timeToPosition(alert.time)}%`,
+                          },
+                        ]}
+                        onPress={() => handleAlertClick(alert)}
+                      />
+                    ))}
                   </View>
-                );
-              })}
-            </View>
+                  <Text style={styles.dayName}>{day.slice(0, 3)}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-            {/* Time Markers */}
-            <View style={styles.timeMarkers}>
-              <Text style={styles.timeMarker}>24h</Text>
-              <Text style={styles.timeMarker}>18h</Text>
-              <Text style={styles.timeMarker}>12h</Text>
-              <Text style={styles.timeMarker}>6h</Text>
-              <Text style={styles.timeMarker}>0h</Text>
-            </View>
+          <View style={styles.timeMarkers}>
+            <Text style={styles.timeMarker}>24h</Text>
+            <Text style={styles.timeMarker}>18h</Text>
+            <Text style={styles.timeMarker}>12h</Text>
+            <Text style={styles.timeMarker}>6h</Text>
+            <Text style={styles.timeMarker}>0h</Text>
           </View>
         </View>
       </View>
 
-      {/* All Alerts */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Tous les entraînements</Text>
-        </View>
-        <View style={styles.cardContent}>
-          {alerts.length === 0 ? (
-            <Text style={styles.emptyText}>
-              Aucun entraînement planifié. Cliquez sur un jour pour en ajouter
-              un !
-            </Text>
-          ) : (
-            <ScrollView style={styles.alertsList}>
-              {alerts.map(alert => {
-                const typeInfo = getTrainingTypeInfo(alert.type);
-                return (
-                  <View key={alert.id} style={styles.alertItem}>
-                    <View style={styles.alertInfo}>
-                      <View
-                        style={[
-                          styles.alertDot,
-                          { backgroundColor: alert.color },
-                        ]}
-                      />
-                      <View style={styles.alertDetails}>
-                        <Text style={styles.alertLabel}>{alert.label}</Text>
-                        <Text style={styles.alertTime}>
-                          {alert.day} à {alert.time}
-                        </Text>
-                        <Text style={styles.alertType}>
-                          {typeInfo.emoji} {typeInfo.label}
-                        </Text>
-                      </View>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() => removeAlert(alert.id)}
-                    >
-                      <Text style={styles.removeButtonText}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-            </ScrollView>
-          )}
-        </View>
-      </View>
-
-      {/* Alert Dialog */}
       <Modal
         visible={selectedDay !== null}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setSelectedDay(null)}
+        onRequestClose={() => {
+          setSelectedDay(null);
+          setSelectedAlert(null);
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              Planifier un entraînement pour {selectedDay}
+              {selectedAlert
+                ? "Modifier l'entraînement"
+                : 'Planifier un entraînement'}{' '}
+              {selectedDay}
             </Text>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Heure</Text>
-              <TextInput
-                style={styles.input}
-                value={alertForm.time}
-                onChangeText={text =>
-                  setAlertForm({ ...alertForm, time: text })
-                }
-                placeholder="07:00"
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Label</Text>
-              <TextInput
-                style={styles.input}
-                value={alertForm.label}
-                onChangeText={text =>
-                  setAlertForm({ ...alertForm, label: text })
-                }
-                placeholder="ex: Course matinale, Séance mobilité"
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Type d'entraînement</Text>
               <View style={styles.typeButtons}>
                 {trainingTypes.map(type => (
                   <TouchableOpacity
                     key={type.key}
                     style={[
                       styles.typeButton,
-                      alertForm.type === type.key && styles.typeButtonActive,
+                      { borderColor: type.color },
+                      alertForm.type === type.key && styles.typeButtonSelected,
                     ]}
                     onPress={() =>
-                      setAlertForm({ ...alertForm, type: type.key as any })
+                      setAlertForm({
+                        ...alertForm,
+                        type: type.key as any,
+                        color: type.color,
+                      })
                     }
                   >
                     <Text style={styles.typeEmoji}>{type.emoji}</Text>
                     <Text
                       style={[
                         styles.typeLabel,
-                        alertForm.type === type.key && styles.typeLabelActive,
+                        alertForm.type === type.key && styles.typeLabelSelected,
                       ]}
                     >
                       {type.label}
@@ -345,39 +297,121 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Couleur</Text>
-              <View style={styles.colorButtons}>
-                {colors.map(color => (
-                  <TouchableOpacity
-                    key={color}
-                    style={[
-                      styles.colorButton,
-                      alertForm.color === color && styles.colorButtonActive,
-                      { backgroundColor: color },
-                    ]}
-                    onPress={() => setAlertForm({ ...alertForm, color })}
-                  />
-                ))}
+              <Text style={styles.label}>Heure</Text>
+              <View style={styles.timePickerContainer}>
+                <View style={styles.pickerColumn}>
+                  <ScrollView
+                    style={styles.picker}
+                    contentContainerStyle={styles.pickerContent}
+                    showsVerticalScrollIndicator={false}
+                    onScroll={handleHourScroll}
+                    onMomentumScrollEnd={() => snapToHour(selectedHour)}
+                    scrollEventThrottle={16}
+                    ref={setHourScrollView}
+                  >
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={[
+                          styles.pickerItem,
+                          selectedHour === i && styles.pickerItemSelected,
+                        ]}
+                        onPress={() => setSelectedHour(i)}
+                      >
+                        <Text
+                          style={[
+                            styles.pickerItemText,
+                            selectedHour === i && styles.pickerItemTextSelected,
+                          ]}
+                        >
+                          {i.toString().padStart(2, '0')}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+
+                <Text style={styles.timeSeparator}>:</Text>
+
+                <View style={styles.pickerColumn}>
+                  <ScrollView
+                    style={styles.picker}
+                    contentContainerStyle={styles.pickerContent}
+                    showsVerticalScrollIndicator={false}
+                    onScroll={handleMinuteScroll}
+                    onMomentumScrollEnd={() => snapToMinute(selectedMinute)}
+                    scrollEventThrottle={16}
+                    ref={setMinuteScrollView}
+                  >
+                    {Array.from({ length: 60 }, (_, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={[
+                          styles.pickerItem,
+                          selectedMinute === i && styles.pickerItemSelected,
+                        ]}
+                        onPress={() => setSelectedMinute(i)}
+                      >
+                        <Text
+                          style={[
+                            styles.pickerItemText,
+                            selectedMinute === i &&
+                              styles.pickerItemTextSelected,
+                          ]}
+                        >
+                          {i.toString().padStart(2, '0')}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
               </View>
             </View>
 
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Nom (facultatif)</Text>
+              <TextInput
+                style={styles.input}
+                value={alertForm.label}
+                onChangeText={text =>
+                  setAlertForm({ ...alertForm, label: text })
+                }
+                placeholder="ex: Bouge toi, gros sac !"
+                placeholderTextColor="#999"
+              />
+            </View>
+
             <View style={styles.modalButtons}>
+              {selectedAlert && (
+                <Button
+                  title="Supprimer"
+                  onPress={handleDeleteAlert}
+                  variant="secondary"
+                  style={styles.modalButton}
+                />
+              )}
               <Button
                 title="Annuler"
-                onPress={() => setSelectedDay(null)}
+                onPress={() => {
+                  setSelectedDay(null);
+                  setSelectedAlert(null);
+                }}
                 variant="secondary"
                 style={styles.modalButton}
               />
               <Button
-                title="Sauvegarder"
-                onPress={handleSaveAlert}
-                disabled={!alertForm.time || !alertForm.label}
+                title={selectedAlert ? 'Modifier' : 'Planifier'}
+                onPress={handleSave}
+                disabled={!alertForm.time}
                 style={styles.modalButton}
               />
             </View>
           </View>
         </View>
       </Modal>
+      <Text style={styles.subtitle}>
+        Clique sur une journée pour planifier un entraînement.
+      </Text>
     </View>
   );
 };
@@ -385,47 +419,18 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    padding: 4,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 12,
+    color: COLORS.noir,
+    alignSelf: 'center',
+    marginTop: 10,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.blanc,
     borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  cardHeader: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  cardContent: {
-    padding: 16,
+    padding: 8,
   },
   weeklyBarsContainer: {
     flexDirection: 'row',
@@ -436,20 +441,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     flex: 1,
     height: 200,
-    marginRight: 20,
   },
   dayColumn: {
     flex: 1,
     alignItems: 'center',
-    marginHorizontal: 2,
+    marginHorizontal: 6,
   },
   dayBarContainer: {
     flex: 1,
     alignItems: 'center',
   },
   dayBar: {
-    width: 2,
-    borderRadius: 1,
+    width: 5,
+    backgroundColor: COLORS.gris,
     flex: 1,
     position: 'relative',
   },
@@ -459,7 +463,7 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#FFFFFF',
+    borderColor: COLORS.blanc,
     left: '50%',
     marginLeft: -4,
     marginTop: -4,
@@ -482,61 +486,6 @@ const styles = StyleSheet.create({
     color: '#999',
     fontWeight: '500',
   },
-  alertsList: {
-    maxHeight: 200,
-  },
-  alertItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  alertInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  alertDetails: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  alertLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-  },
-  alertTime: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  alertType: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  removeButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#FF4444',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  removeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#999',
-    fontSize: 14,
-    paddingVertical: 20,
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -544,7 +493,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.background,
     borderRadius: 12,
     padding: 20,
     margin: 20,
@@ -569,28 +518,27 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.gris,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.blanc,
   },
+
   typeButtons: {
     flexDirection: 'row',
     gap: 8,
   },
   typeButton: {
     flex: 1,
-    padding: 12,
+    padding: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: COLORS.blanc,
   },
-  typeButtonActive: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+  typeButtonSelected: {
+    backgroundColor: COLORS.orange,
   },
   typeEmoji: {
     fontSize: 20,
@@ -598,34 +546,61 @@ const styles = StyleSheet.create({
   },
   typeLabel: {
     fontSize: 12,
-    color: '#666',
     textAlign: 'center',
+    color: COLORS.noir,
   },
-  typeLabelActive: {
-    color: '#FFFFFF',
+  typeLabelSelected: {
+    color: COLORS.blanc,
     fontWeight: '600',
   },
-  colorButtons: {
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  colorButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  colorButtonActive: {
-    borderColor: '#333',
-  },
+
   modalButtons: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 20,
   },
   modalButton: {
     flex: 1,
+  },
+  timePickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.gris,
+    borderRadius: 8,
+    backgroundColor: COLORS.blanc,
+  },
+  pickerColumn: {
+    alignItems: 'center',
+  },
+  picker: {
+    height: 40, // Hauteur d'un seul item
+    width: 80,
+  },
+  pickerContent: {
+    paddingVertical: 0, // Pas de padding pour centrer
+  },
+  pickerItem: {
+    height: 40, // Hauteur fixe pour un seul item visible
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+  },
+  pickerItemSelected: {
+    backgroundColor: COLORS.orange,
+  },
+  pickerItemText: {
+    fontSize: 16,
+    color: COLORS.noir,
+  },
+  pickerItemTextSelected: {
+    color: COLORS.blanc,
+    fontWeight: '600',
+  },
+  timeSeparator: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.noir,
+    marginHorizontal: 12,
   },
 });
