@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { COLORS } from '../constantes/color.constante';
+import Icon from 'react-native-vector-icons/Octicons';
 
 export default function Header() {
   const headerLogo = require('../../public/logos/LR-logo-carre.png');
@@ -26,7 +27,7 @@ export default function Header() {
 
       <View>
         <TouchableOpacity style={styles.infoButton}>
-          <Text style={styles.infoIcon}>💡</Text>
+          <Icon name="light-bulb" size={20} color={COLORS.noir} />
         </TouchableOpacity>
       </View>
     </View>

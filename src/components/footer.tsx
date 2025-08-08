@@ -7,6 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import { COLORS } from '../constantes/color.constante';
+import Icon from 'react-native-vector-icons/Octicons';
 
 interface FooterProps {
   activeTab?: string;
@@ -17,6 +18,7 @@ interface TabItem {
   id: string;
   name: string;
   icon: string;
+  iconType?: 'emoji' | 'vector';
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -33,17 +35,20 @@ export const Footer: React.FC<FooterProps> = ({
     {
       id: 'home',
       name: 'Accueil',
-      icon: '🏠',
+      icon: 'home',
+      iconType: 'vector',
     },
     {
       id: 'mobility',
       name: 'Mobilité',
-      icon: '⚡',
+      icon: 'accessibility',
+      iconType: 'vector',
     },
     {
       id: 'strengthening',
       name: 'Renforcement',
-      icon: '🔥',
+      icon: 'flame',
+      iconType: 'vector',
     },
   ];
 
@@ -55,11 +60,20 @@ export const Footer: React.FC<FooterProps> = ({
           style={styles.tab}
           onPress={() => handleTabPress(tab.id)}
         >
-          <Text
-            style={[styles.icon, activeTab === tab.id && styles.activeIcon]}
-          >
-            {tab.icon}
-          </Text>
+          {tab.iconType === 'vector' ? (
+            <Icon
+              name={tab.icon}
+              size={24}
+              color={activeTab === tab.id ? COLORS.orange : COLORS.gris_fonce}
+              style={activeTab === tab.id && styles.activeIcon}
+            />
+          ) : (
+            <Text
+              style={[styles.icon, activeTab === tab.id && styles.activeIcon]}
+            >
+              {tab.icon}
+            </Text>
+          )}
           <Text
             style={[
               styles.tabText,

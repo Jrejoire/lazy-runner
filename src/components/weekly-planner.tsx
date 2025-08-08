@@ -16,6 +16,7 @@ import {
   TrainingTypeKey,
 } from '../constantes/training-types.constante';
 import { TimePicker } from './time-picker';
+import Icon from 'react-native-vector-icons/Octicons';
 
 interface TrainingAlert {
   id: string;
@@ -241,7 +242,19 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                       })
                     }
                   >
-                    <Text style={styles.typeEmoji}>{type.emoji}</Text>
+                    {type.icon ? (
+                      <Icon
+                        name={type.icon}
+                        size={20}
+                        color={
+                          alertForm.type === type.key
+                            ? COLORS.blanc
+                            : COLORS.noir
+                        }
+                      />
+                    ) : (
+                      <Text style={styles.typeEmoji}>{type.emoji}</Text>
+                    )}
                     <Text
                       style={[
                         styles.typeLabel,
@@ -328,12 +341,14 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
         <View style={styles.legendItems}>
           {trainingTypes.map(type => (
             <View key={type.key} style={styles.legendItem}>
-              <View
-                style={[styles.legendDot, { backgroundColor: type.color }]}
-              />
-              <Text style={styles.legendText}>
-                {type.emoji} {type.label}
-              </Text>
+              <View style={styles.legendContent}>
+                {type.icon ? (
+                  <Icon name={type.icon} size={16} color={type.color} />
+                ) : (
+                  <Text style={styles.legendEmoji}>{type.emoji}</Text>
+                )}
+                <Text style={styles.legendText}>{type.label}</Text>
+              </View>
             </View>
           ))}
         </View>
@@ -511,9 +526,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.blanc,
   },
+  legendContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  legendEmoji: {
+    fontSize: 16,
+  },
   legendText: {
     fontSize: 12,
     color: COLORS.noir,
     fontWeight: '500',
+    marginLeft: 4,
   },
 });

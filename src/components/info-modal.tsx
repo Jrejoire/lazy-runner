@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { COLORS } from '../constantes/color.constante';
+import Icon from 'react-native-vector-icons/Octicons';
 
 interface InfoModalProps {
   visible: boolean;
@@ -42,7 +43,12 @@ export const InfoModal: React.FC<InfoModalProps> = ({ visible, onClose }) => {
           {/* Header avec bouton de fermeture */}
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <Text style={styles.icon}>💡</Text>
+              <Icon
+                name="light-bulb"
+                size={24}
+                color={COLORS.noir}
+                style={styles.icon}
+              />
               <Text style={styles.title}>À propos de LazyRunner</Text>
             </View>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -134,7 +140,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   icon: {
-    fontSize: 24,
     marginRight: 12,
   },
   title: {

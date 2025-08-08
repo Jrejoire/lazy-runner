@@ -4,16 +4,30 @@ export interface TrainingType {
   key: TrainingTypeKey;
   label: string;
   emoji: string;
+  icon?: string; // Pour les icônes vectorielles
   color: string;
 }
 
 export const TRAINING_TYPES: TrainingType[] = [
-  { key: 'running', label: 'Course', emoji: '🏃‍♂️', color: '#FF6B35' },
-  { key: 'mobility', label: 'Mobilité', emoji: '🧘‍♀️', color: '#4CAF50' },
+  {
+    key: 'running',
+    label: 'Course',
+    emoji: '🏃‍♂️',
+    icon: 'zap',
+    color: '#FF6B35',
+  },
+  {
+    key: 'mobility',
+    label: 'Mobilité',
+    emoji: '🧘‍♀️',
+    icon: 'accessibility',
+    color: '#4CAF50',
+  },
   {
     key: 'strengthening',
     label: 'Renforcement',
-    emoji: '💪',
+    emoji: '🔥',
+    icon: 'flame',
     color: '#F44336',
   },
 ];
