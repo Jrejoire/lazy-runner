@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import NotificationService from '../services/notification-service';
+import { TrainingTypeKey } from '../constantes/training-types.constante';
 
 export const useNotifications = () => {
   const [hasPermission, setHasPermission] = useState<boolean>(false);
@@ -31,7 +32,7 @@ export const useNotifications = () => {
     title: string;
     message: string;
     date: Date;
-    trainingType: 'running' | 'mobility' | 'strengthening';
+    trainingType: TrainingTypeKey;
   }) => {
     try {
       await NotificationService.getInstance().scheduleTrainingNotifications(

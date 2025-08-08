@@ -11,6 +11,10 @@ import {
 } from 'react-native';
 import { Button } from './button';
 import { COLORS } from '../constantes/color.constante';
+import {
+  TRAINING_TYPES,
+  TrainingTypeKey,
+} from '../constantes/training-types.constante';
 import { TimePicker } from './time-picker';
 
 interface TrainingAlert {
@@ -19,7 +23,7 @@ interface TrainingAlert {
   time: string;
   label: string;
   color: string;
-  type: 'running' | 'mobility' | 'strengthening';
+  type: TrainingTypeKey;
 }
 
 interface WeeklyPlannerProps {
@@ -39,7 +43,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     time: '',
     label: '',
     color: '#FF6B35',
-    type: 'running' as 'running' | 'mobility' | 'strengthening',
+    type: 'running' as TrainingTypeKey,
   });
   const [selectedHour, setSelectedHour] = useState(12);
   const [selectedMinute, setSelectedMinute] = useState(0);
@@ -54,21 +58,13 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     'dimanche',
   ];
 
-  const trainingTypes = [
-    { key: 'running', label: 'Course', emoji: '🏃‍♂️', color: '#FF6B35' },
-    { key: 'mobility', label: 'Mobilité', emoji: '🧘‍♀️', color: '#4CAF50' },
-    {
-      key: 'strengthening',
-      label: 'Renforcement',
-      emoji: '💪',
-      color: '#F44336',
-    },
-  ];
+  const trainingTypes = TRAINING_TYPES;
 
   const timeToPosition = (timeString: string): number => {
     const [hours, minutes] = timeString.split(':').map(Number);
     const totalMinutes = hours * 60 + minutes;
-    return (totalMinutes / (24 * 60)) * 100;
+
+    return 100 - (totalMinutes / (24 * 60)) * 100;
   };
 
   const handleBarClick = (day: string) => {
@@ -80,7 +76,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
       time: '',
       label: '',
       color: '#FF6B35',
-      type: 'running',
+      type: 'running' as TrainingTypeKey,
     });
   };
 
@@ -88,7 +84,6 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     setSelectedAlert(alert);
     setSelectedDay(alert.day);
 
-    // Parser l'heure existante pour définir les pickers
     const [hours, minutes] = alert.time.split(':').map(Number);
     setSelectedHour(hours);
     setSelectedMinute(minutes);
@@ -118,24 +113,21 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     };
 
     if (selectedAlert) {
-      // Modifier un entraînement existant
       const updatedAlerts = alerts.map(alert =>
         alert.id === selectedAlert.id ? newAlert : alert,
       );
       onAlertsChange(updatedAlerts);
     } else {
-      // Ajouter un nouvel entraînement
       onAlertsChange([...alerts, newAlert]);
     }
 
-    // Reset du formulaire
     setSelectedDay(null);
     setSelectedAlert(null);
     setAlertForm({
       time: '',
       label: '',
       color: '#FF6B35',
-      type: 'running',
+      type: 'running' as TrainingTypeKey,
     });
   };
 
@@ -148,13 +140,15 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
         time: '',
         label: '',
         color: '#FF6B35',
-        type: 'running',
+        type: 'running' as TrainingTypeKey,
       });
     }
   };
 
   const getDayAlerts = (day: string) => {
-    return alerts.filter(alert => alert.day === day);
+    const dayAlerts = alerts.filter(alert => alert.day === day);
+    console.log(`Alertes pour ${day}:`, dayAlerts);
+    return dayAlerts;
   };
 
   return (
@@ -172,19 +166,25 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                   activeOpacity={0.7}
                 >
                   <View style={styles.dayBar}>
-                    {dayAlerts.map(alert => (
-                      <TouchableOpacity
-                        key={alert.id}
-                        style={[
-                          styles.alertDot,
-                          {
-                            backgroundColor: alert.color,
-                            top: `${timeToPosition(alert.time)}%`,
-                          },
-                        ]}
-                        onPress={() => handleAlertClick(alert)}
-                      />
-                    ))}
+                    {dayAlerts.map(alert => {
+                      const position = timeToPosition(alert.time);
+                      console.log(
+                        `Pastille pour ${alert.day} à ${alert.time}: position ${position}%`,
+                      );
+                      return (
+                        <TouchableOpacity
+                          key={alert.id}
+                          style={[
+                            styles.alertDot,
+                            {
+                              backgroundColor: alert.color,
+                              top: `${position}%`,
+                            },
+                          ]}
+                          onPress={() => handleAlertClick(alert)}
+                        />
+                      );
+                    })}
                   </View>
                   <Text style={styles.dayName}>{day.slice(0, 3)}</Text>
                 </TouchableOpacity>
@@ -228,7 +228,10 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                     style={[
                       styles.typeButton,
                       { borderColor: type.color },
-                      alertForm.type === type.key && styles.typeButtonSelected,
+                      alertForm.type === type.key && {
+                        backgroundColor: type.color,
+                        borderColor: type.color,
+                      },
                     ]}
                     onPress={() =>
                       setAlertForm({
@@ -242,7 +245,10 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                     <Text
                       style={[
                         styles.typeLabel,
-                        alertForm.type === type.key && styles.typeLabelSelected,
+                        alertForm.type === type.key && {
+                          color: COLORS.blanc,
+                          fontWeight: '600',
+                        },
                       ]}
                     >
                       {type.label}
@@ -262,7 +268,6 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                 onTimeChange={(hour, minute) => {
                   setSelectedHour(hour);
                   setSelectedMinute(minute);
-                  // Mettre à jour le formulaire avec la nouvelle heure
                   const timeString = `${hour
                     .toString()
                     .padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
@@ -283,7 +288,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                   setAlertForm({ ...alertForm, label: text })
                 }
                 placeholder="ex: Bouge toi, gros sac !"
-                placeholderTextColor="#999"
+                placeholderTextColor={COLORS.gris_fonce}
               />
             </View>
 
@@ -318,6 +323,21 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
       <Text style={styles.subtitle}>
         Clique sur une journée pour planifier un entraînement.
       </Text>
+
+      <View style={styles.legendContainer}>
+        <View style={styles.legendItems}>
+          {trainingTypes.map(type => (
+            <View key={type.key} style={styles.legendItem}>
+              <View
+                style={[styles.legendDot, { backgroundColor: type.color }]}
+              />
+              <Text style={styles.legendText}>
+                {type.emoji} {type.label}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
     </View>
   );
 };
@@ -325,7 +345,8 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 4,
+    padding: 8,
+    marginTop: 10,
   },
   subtitle: {
     fontSize: 12,
@@ -365,14 +386,14 @@ const styles = StyleSheet.create({
   },
   alertDot: {
     position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     borderWidth: 1,
     borderColor: COLORS.blanc,
     left: '50%',
-    marginLeft: -4,
-    marginTop: -4,
+    marginLeft: -9,
+    marginTop: -9,
     zIndex: 2,
   },
   dayName: {
@@ -443,9 +464,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.blanc,
   },
-  typeButtonSelected: {
-    backgroundColor: COLORS.orange,
-  },
   typeEmoji: {
     fontSize: 20,
     marginBottom: 4,
@@ -455,10 +473,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: COLORS.noir,
   },
-  typeLabelSelected: {
-    color: COLORS.blanc,
-    fontWeight: '600',
-  },
 
   modalButtons: {
     flexDirection: 'row',
@@ -466,5 +480,40 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
+  },
+  legendContainer: {
+    marginTop: 16,
+    paddingHorizontal: 8,
+  },
+  legendTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.noir,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  legendItems: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+    marginHorizontal: 8,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: COLORS.blanc,
+  },
+  legendText: {
+    fontSize: 12,
+    color: COLORS.noir,
+    fontWeight: '500',
   },
 });

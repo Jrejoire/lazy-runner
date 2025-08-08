@@ -1,25 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { getRandomCitation, Citation } from '../data/citations';
+import { COLORS } from '../constantes/color.constante';
 
-interface QuoteCardProps {
-  text: string;
-  author: string;
-  source: string;
-  year: number;
-}
+export const QuoteCard: React.FC = () => {
+  const [quote, setQuote] = useState<Citation | null>(null);
 
-export const QuoteCard: React.FC<QuoteCardProps> = ({
-  text,
-  author,
-  source,
-  year,
-}) => {
+  useEffect(() => {
+    const citation = getRandomCitation();
+    setQuote(citation);
+  }, []);
+
+  if (!quote) {
+    return null;
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.text}>"{text}"</Text>
+        <Text style={styles.text}>"{quote.texte}"</Text>
         <Text style={styles.author}>
-          — {author}, {source} ({year})
+          — {quote.personnage}, {quote.film} ({quote.annee})
         </Text>
       </View>
     </View>
@@ -28,14 +29,9 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.blanc,
     borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginVertical: 16,
   },
   content: {
     padding: 24,

@@ -6,6 +6,7 @@ import notifee, {
   EventType,
 } from '@notifee/react-native';
 import { Platform } from 'react-native';
+import { TrainingTypeKey } from '../constantes/training-types.constante';
 
 interface NotificationData {
   id: string;
@@ -13,7 +14,7 @@ interface NotificationData {
   message: string;
   date: Date;
   type: 'training' | 'reminder';
-  trainingType?: 'running' | 'mobility' | 'strengthening';
+  trainingType?: TrainingTypeKey;
 }
 
 class NotificationService {
@@ -60,7 +61,7 @@ class NotificationService {
     title: string;
     message: string;
     date: Date;
-    trainingType: 'running' | 'mobility' | 'strengthening';
+    trainingType: TrainingTypeKey;
   }): Promise<void> {
     try {
       // Programmer 30 minutes avant
@@ -99,7 +100,7 @@ class NotificationService {
     title: string;
     message: string;
     date: Date;
-    trainingType: 'running' | 'mobility' | 'strengthening';
+    trainingType: TrainingTypeKey;
   }): Promise<void> {
     try {
       const trigger: Trigger = {
@@ -138,7 +139,7 @@ class NotificationService {
     title: string;
     message: string;
     date: Date;
-    trainingType: 'running' | 'mobility' | 'strengthening';
+    trainingType: TrainingTypeKey;
   }): Promise<void> {
     // Programmer le rappel (30 min avant)
     await this.scheduleTrainingReminder(data);

@@ -45,8 +45,8 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -61,22 +61,21 @@ const styles = StyleSheet.create({
     borderColor: COLORS.orange,
   },
   danger: {
-    backgroundColor: '#F44336',
+    backgroundColor: COLORS.background,
   },
   disabled: {
     opacity: 0.5,
   },
   text: {
     fontSize: 16,
-    fontWeight: '600',
   },
   primaryText: {
-    color: '#FFFFFF',
+    color: COLORS.blanc,
   },
   secondaryText: {
     color: COLORS.orange,
   },
   dangerText: {
-    color: '#FFFFFF',
+    color: COLORS.blanc,
   },
 });

@@ -1,3 +1,5 @@
+import { TrainingTypeKey } from '../constantes/training-types.constante';
+
 export interface MobilityExercise {
   id: string;
   name: string;
@@ -40,7 +42,7 @@ export interface User {
 
 export interface Session {
   id: string;
-  type: 'mobility' | 'strengthening';
+  type: TrainingTypeKey;
   exercises: MobilityExercise[] | StrengtheningExercise[];
   totalDuration: number;
   currentExerciseIndex: number;

@@ -18,7 +18,7 @@ export const WelcomeHeader: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingVertical: 16,
+    marginVertical: 10,
   },
   title: {
     fontWeight: 'bold',

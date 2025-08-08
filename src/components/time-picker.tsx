@@ -48,7 +48,6 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     if (hourScrollViewRef.current) {
       hourScrollViewRef.current.scrollTo({ y: hour * 40, animated: true });
     }
-    // Notifier le parent de la valeur finalisée
     if (onTimeChange) {
       onTimeChange(hour, selectedMinute);
     }
@@ -58,7 +57,6 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     if (minuteScrollViewRef.current) {
       minuteScrollViewRef.current.scrollTo({ y: minute * 40, animated: true });
     }
-    // Notifier le parent de la valeur finalisée
     if (onTimeChange) {
       onTimeChange(selectedHour, minute);
     }
