@@ -1,14 +1,60 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Layout } from '../components';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Layout, Timer, ExercisesSection } from '../components';
 import { COLORS } from '../constantes/color.constante';
+import { mobilityExercises } from '../data/mobility-exercises';
+import { MobilityExerciseWithPreference } from '../types';
 
 export default function MobilityScreen() {
+  const [exercises, setExercises] = useState<MobilityExerciseWithPreference[]>(
+    mobilityExercises.map(exercise => ({
+      ...exercise,
+      userPreference: 'white',
+    })),
+  );
+
+  const handleExercisePress = (exercise: MobilityExerciseWithPreference) => {
+    console.log('Exercise pressed:', exercise.name);
+  };
+
+  const handlePreferenceChange = (
+    exerciseId: string,
+    preference: 'green' | 'red' | 'white',
+  ) => {
+    setExercises(prev =>
+      prev.map(exercise =>
+        exercise.id === exerciseId
+          ? { ...exercise, userPreference: preference }
+          : exercise,
+      ),
+    );
+  };
+
   return (
     <Layout>
-      <View style={styles.container}>
-        <Text style={styles.text}>Mobilité Screen</Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Timer
+          seconds={300}
+          label="Durée de la séance"
+          mode="setter"
+          onValueChange={value => console.log('Value changed:', value)}
+          onComplete={() => console.log('Timer completed')}
+        />
+
+        <Timer
+          seconds={30}
+          label="Durée de chaque exercice"
+          mode="setter"
+          onValueChange={value => console.log('Value changed:', value)}
+          onComplete={() => console.log('Timer completed')}
+        />
+
+        <ExercisesSection
+          exercises={exercises}
+          onExercisePress={handleExercisePress}
+          onPreferenceChange={handlePreferenceChange}
+        />
+      </ScrollView>
     </Layout>
   );
 }
@@ -16,12 +62,7 @@ export default function MobilityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.BACKGROUND_SECONDARY,
-  },
-  text: {
-    fontSize: 24,
-    color: COLORS.TEXT_PRIMARY,
+    backgroundColor: COLORS.background,
+    paddingHorizontal: 16,
   },
 });

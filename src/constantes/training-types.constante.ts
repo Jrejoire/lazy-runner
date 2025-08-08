@@ -1,3 +1,5 @@
+import { COLORS } from './color.constante';
+
 export type TrainingTypeKey = 'running' | 'mobility' | 'strengthening';
 
 export interface TrainingType {
@@ -14,21 +16,21 @@ export const TRAINING_TYPES: TrainingType[] = [
     label: 'Course',
     emoji: '🏃‍♂️',
     icon: 'zap',
-    color: '#FF6B35',
+    color: COLORS.running,
   },
   {
     key: 'mobility',
     label: 'Mobilité',
     emoji: '🧘‍♀️',
-    icon: 'accessibility',
-    color: '#4CAF50',
+    icon: 'ruby',
+    color: COLORS.mobility,
   },
   {
     key: 'strengthening',
     label: 'Renforcement',
     emoji: '🔥',
     icon: 'flame',
-    color: '#F44336',
+    color: COLORS.strengthening,
   },
 ];
 

@@ -8,15 +8,11 @@ export const ColorLegend: React.FC = () => {
       <View style={styles.legendContainer}>
         <View style={styles.legendItem}>
           <Text style={styles.emoji}>🟢</Text>
-          <Text style={styles.text}>J'aime cet exercice</Text>
+          <Text style={styles.text}>J'aime</Text>
         </View>
         <View style={styles.legendItem}>
           <Text style={styles.emoji}>🔴</Text>
-          <Text style={styles.text}>Je n'aime pas cet exercice</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <Text style={styles.emoji}>⚪️</Text>
-          <Text style={styles.text}>Neutre</Text>
+          <Text style={styles.text}>Je n'aime pas</Text>
         </View>
       </View>
     </View>
@@ -25,12 +21,8 @@ export const ColorLegend: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F8F9FA',
     padding: 16,
     margin: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E9ECEF',
   },
   title: {
     fontSize: 14,

@@ -104,12 +104,15 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
       .toString()
       .padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
 
+    const trainingType = TRAINING_TYPES.find(
+      type => type.key === alertForm.type,
+    );
     const newAlert: TrainingAlert = {
       id: selectedAlert?.id || Date.now().toString(),
       day: selectedDay,
       time: timeString,
       label: alertForm.label,
-      color: alertForm.color,
+      color: trainingType?.color || alertForm.color,
       type: alertForm.type,
     };
 
@@ -169,6 +172,10 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                   <View style={styles.dayBar}>
                     {dayAlerts.map(alert => {
                       const position = timeToPosition(alert.time);
+                      const trainingType = TRAINING_TYPES.find(
+                        type => type.key === alert.type,
+                      );
+                      const dotColor = trainingType?.color || alert.color;
                       console.log(
                         `Pastille pour ${alert.day} à ${alert.time}: position ${position}%`,
                       );
@@ -178,7 +185,7 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                           style={[
                             styles.alertDot,
                             {
-                              backgroundColor: alert.color,
+                              backgroundColor: dotColor,
                               top: `${position}%`,
                             },
                           ]}

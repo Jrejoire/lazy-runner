@@ -41,7 +41,7 @@ export const Footer: React.FC<FooterProps> = ({
     {
       id: 'mobility',
       name: 'Mobilité',
-      icon: 'accessibility',
+      icon: 'ruby',
       iconType: 'vector',
     },
     {

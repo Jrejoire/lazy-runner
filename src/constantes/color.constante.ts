@@ -7,8 +7,8 @@ export const COLORS = {
   gris_fonce: '#cccccc',
   blanc: '#ffffff',
   noir: '#000000',
-  rouge: '#ff0000',
-  vert: '#00ff00',
+  rouge: '#db2323',
+  vert: '#05a312',
   bleu: '#0000ff',
   jaune: '#ffff00',
   violet: '#800080',
@@ -23,6 +23,11 @@ export const COLORS = {
   warning: '#FF9800',
   error: '#F44336',
   info: '#2196F3',
+
+  // Couleurs des entrainements
+  running: '#FF6B35',
+  mobility: '#4CAF50',
+  strengthening: '#B61B28',
 } as const;
 
 // Types pour les couleurs

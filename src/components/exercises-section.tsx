@@ -1,34 +1,28 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
-import { ExerciseCard, ColorLegend } from './exercise-card';
+import { ExerciseCard } from './exercise-card';
+import { ColorLegend } from './color-legend';
 import { MobilityExerciseWithPreference } from '../types';
 
 interface ExercisesSectionProps {
   exercises: MobilityExerciseWithPreference[];
   onExercisePress: (exercise: MobilityExerciseWithPreference) => void;
-  onPreferenceChange: (exerciseId: string, preference: 'green' | 'red' | 'white') => void;
-  selectedCount: number;
+  onPreferenceChange: (
+    exerciseId: string,
+    preference: 'green' | 'red' | 'white',
+  ) => void;
 }
 
 export const ExercisesSection: React.FC<ExercisesSectionProps> = ({
   exercises,
   onExercisePress,
   onPreferenceChange,
-  selectedCount,
 }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Exercices de mobilité</Text>
-        <Text style={styles.count}>
-          {selectedCount} exercice(s) sélectionné(s)
-        </Text>
-      </View>
+      <Text style={styles.title}>Exercices</Text>
 
-      <ScrollView
-        style={styles.list}
-        contentContainerStyle={styles.content}
-      >
+      <ScrollView>
         {exercises.map(exercise => (
           <ExerciseCard
             key={exercise.id}
@@ -50,24 +44,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
   title: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
     marginBottom: 4,
-  },
-  count: {
-    fontSize: 14,
-    color: '#666',
-  },
-  list: {
-    flex: 1,
-  },
-  content: {
-    paddingBottom: Platform.OS === 'android' ? 100 : 20,
   },
 });
